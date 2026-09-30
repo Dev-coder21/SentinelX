@@ -344,7 +344,17 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Compact multi-axis filtering (risk bracket, operating corridor, criticality tier, product hub toggle) and keyboard-accessible node selector.
   - Camera control toolbar (Zoom In, Zoom Out, Zoom to Fit, Center Selected Node) and compact visual legend.
   - Zero mock data; 100% clean TypeScript build and lint.
-- [ ] **Phase 10: Constrained Optimization & Mitigation Simulation Workspace (Next)**
-  - Full optimization experience, animated budget bar, protected revenue simulation, and comparative action planning.
+- [x] **Phase 10: Optimization Decision Experience (COMPLETE)**
+  - Full operational decision-support workspace turning capital recovery constraints into prioritized mitigation actions.
+  - Interactive capital budget input with validation, preset quick-buttons, and real-time execution via `POST /prioritize`.
+  - Prominent animated expected protected revenue counter and PuLP objective value matching exact solver output.
+  - Animated budget utilization bar (Framer Motion) displaying allocated capital vs. remaining cushion with sub-second settling.
+  - Distinct operational banners distinguishing between `LATEST PERSISTED PLAN` (from `GET /mitigation-plans/latest`) and `NEW OPTIMIZATION RESULT`.
+  - Rich action cards communicating complete decision rationale: Risk status → Mitigation Cost → Protected Revenue → Value-Efficiency ROI multiple (`Protected Revenue / Cost`) → Deterministic Rationale.
+  - Meaningful zero-selection outcome state for insufficient budgets without application error.
+  - Direct workflow navigation: "Inspect in Network" deep-links directly to `/network?select=${supplier_id}` auto-focusing the node on the 2D dependency graph; "Telemetry Detail" links to `/suppliers/${id}`.
+  - Full accessibility compliance with `prefers-reduced-motion` integration, 0 lint warnings, clean Vite production build, and 86/86 backend pytest passing.
+- [ ] **Phase 11: Production Polish, End-to-End Validation & Deployment (Next)**
+  - End-to-end integration validation, performance audit, Docker containerization, and final production hardening.
 
 

@@ -1,4 +1,6 @@
-import React, { useState, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
+import { Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   SlidersHorizontal,
   DollarSign,
@@ -7,35 +9,112 @@ import {
   Play,
   Loader2,
   AlertCircle,
+  Network,
+  ExternalLink,
+  Info,
+  Clock,
+  AlertTriangle,
+  RotateCcw,
 } from 'lucide-react'
 import { apiClient, ApiError } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
 import { LoadingState } from '@/components/common/LoadingState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
-import { StatCard } from '@/components/common/StatCard'
 import { RiskBadge } from '@/components/common/RiskBadge'
+import type { PrioritizeResponse } from '@/types/api'
+
+// Hook to detect prefers-reduced-motion
+function usePrefersReducedMotion(): boolean {
+  const [reduced, setReduced] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  })
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  return reduced
+}
+
+// Animated currency counter settling strictly on the exact API value
+const AnimatedCurrency: React.FC<{
+  value: number
+  duration?: number
+  reducedMotion?: boolean
+}> = ({ value, duration = 0.28, reducedMotion = false }) => {
+  const [displayValue, setDisplayValue] = useState<number>(0)
+
+  useEffect(() => {
+    if (reducedMotion) return
+
+    let startTime: number | null = null
+    const startVal = 0
+    let frameId: number
+
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp
+      const elapsed = (timestamp - startTime) / (duration * 1000)
+      const progress = Math.min(elapsed, 1)
+      // Ease out cubic
+      const ease = 1 - Math.pow(1 - progress, 3)
+      const current = Math.round(startVal + (value - startVal) * ease)
+      setDisplayValue(current)
+
+      if (progress < 1) {
+        frameId = requestAnimationFrame(step)
+      } else {
+        setDisplayValue(value)
+      }
+    }
+
+    frameId = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(frameId)
+  }, [value, duration, reducedMotion])
+
+  if (reducedMotion) {
+    return <span>${value.toLocaleString()}</span>
+  }
+
+  return <span>${displayValue.toLocaleString()}</span>
+}
 
 export const PrioritizationPage: React.FC = () => {
-  const fetchLatestPlan = useCallback(() => apiClient.getLatestMitigationPlan(), [])
-  const {
-    data: plan,
-    loading: initialLoading,
-    setData: setPlan,
-  } = useApi(fetchLatestPlan, [])
+  const reducedMotion = usePrefersReducedMotion()
 
+  const fetchLatestPlan = useCallback(() => apiClient.getLatestMitigationPlan(), [])
+  const { data: initialPlan, loading: initialLoading } = useApi(fetchLatestPlan, [])
+
+  const [newRunPlan, setNewRunPlan] = useState<PrioritizeResponse | null>(null)
+  const activePlan = newRunPlan || initialPlan
+  const planOrigin = newRunPlan ? 'new_run' : initialPlan ? 'persisted' : null
+
+  // Form inputs
   const [budgetInput, setBudgetInput] = useState<string>('500000')
-  const [strategy, setStrategy] = useState<'max_revenue' | 'cost_efficiency' | 'tier_weighted'>('max_revenue')
   const [submitting, setSubmitting] = useState<boolean>(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
+
+  // Quick preset options
+  const budgetPresets = [
+    { label: '$100K', value: 100000 },
+    { label: '$250K', value: 250000 },
+    { label: '$500K', value: 500000 },
+    { label: '$1.0M', value: 1000000 },
+  ]
 
   const handleRunOptimization = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitError(null)
-    const budgetNum = parseFloat(budgetInput)
+
+    const budgetNum = parseFloat(budgetInput.replace(/,/g, ''))
 
     if (isNaN(budgetNum) || budgetNum < 0) {
-      setSubmitError('Please enter a valid positive capital budget (e.g. $250,000).')
+      setSubmitError('Please enter a valid non-negative capital budget constraint (e.g. $500,000).')
       return
     }
 
@@ -43,224 +122,448 @@ export const PrioritizationPage: React.FC = () => {
     try {
       const response = await apiClient.prioritize({
         budget: budgetNum,
-        strategy,
+        strategy: 'max_revenue',
       })
-      setPlan(response)
+      setNewRunPlan(response)
     } catch (err: unknown) {
       if (err instanceof ApiError) {
         setSubmitError(err.detail || err.message)
       } else if (err instanceof Error) {
         setSubmitError(err.message)
       } else {
-        setSubmitError('Failed to execute linear programming optimization.')
+        setSubmitError('Linear programming optimizer failed to execute.')
       }
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (initialLoading && !plan) {
-    return <LoadingState message="Retrieving latest persisted LP mitigation plan..." />
-  }
+  // Derived budget utilization metrics
+  const utilization = useMemo(() => {
+    if (!activePlan || activePlan.budget <= 0) return { pct: 0, used: 0, remaining: 0, total: 0 }
+    const total = activePlan.budget
+    const used = activePlan.total_budget_used
+    const remaining = Math.max(0, activePlan.remaining_budget)
+    const pct = Math.min(100, Math.max(0, (used / total) * 100))
+    return { pct, used, remaining, total }
+  }, [activePlan])
 
-  // 404 or empty is expected if no plan has been generated yet, don't crash
-  const hasPlan = Boolean(plan && plan.plan_id)
+  if (initialLoading && !activePlan) {
+    return <LoadingState message="Retrieving latest persisted mitigation plan..." />
+  }
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Mitigation Prioritization Engine"
-        subtitle="Constrained Linear Programming (PuLP Knapsack) maximizing protected revenue under recovery budget limits."
+        subtitle="Constrained Linear Programming (PuLP Knapsack) allocating capital to maximize expected protected revenue under budget limits."
       />
 
-      {/* Budget Allocation Form */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+      {/* 1. Mitigation Budget Input & Solver Controls */}
+      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 shadow-sm">
         <form onSubmit={handleRunOptimization} className="space-y-4">
-          <div className="flex items-center space-x-2">
-            <SlidersHorizontal className="w-4 h-4 text-[#3DD6C4]" />
-            <h3 className="text-sm font-semibold text-white">Solver Parameters</h3>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <SlidersHorizontal className="w-4 h-4 text-[#3DD6C4]" />
+              <h3 className="text-sm font-semibold text-white">Solver Parameters &amp; Capital Constraint</h3>
+            </div>
+            <span className="text-[11px] font-mono text-slate-400">
+              Formulation: 0-1 Binary Knapsack LP (PuLP CBC)
+            </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Capital Budget Input */}
-            <div className="space-y-1 sm:col-span-2">
-              <label htmlFor="budget-input" className="text-xs font-mono text-slate-400 flex items-center justify-between">
-                <span>Capital Mitigation Budget (USD)</span>
-                <span className="text-[10px] text-slate-400">Total available mitigation budget</span>
-              </label>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
+            {/* Input field */}
+            <div className="space-y-1 lg:col-span-2">
+              <div className="flex items-center justify-between">
+                <label
+                  htmlFor="mitigation-budget-input"
+                  className="text-xs font-mono text-slate-300 block font-medium"
+                >
+                  Capital Recovery Budget (USD)
+                </label>
+                <div className="flex items-center space-x-1.5">
+                  <span className="text-[10px] font-mono text-slate-400">Presets:</span>
+                  {budgetPresets.map((preset) => (
+                    <button
+                      key={preset.value}
+                      type="button"
+                      disabled={submitting}
+                      onClick={() => setBudgetInput(String(preset.value))}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#162036] hover:bg-[#1E2C48] text-slate-300 hover:text-[#3DD6C4] border border-[#233352] transition-colors"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="relative">
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
-                  id="budget-input"
+                  id="mitigation-budget-input"
                   type="number"
                   min="0"
                   step="10000"
+                  disabled={submitting}
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(e.target.value)}
                   placeholder="500000"
-                  className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm font-mono text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
+                  className="w-full pl-9 pr-4 py-2.5 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm font-mono text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4] disabled:opacity-50"
                 />
               </div>
             </div>
 
-            {/* Objective Strategy */}
-            <div className="space-y-1">
-              <label htmlFor="strategy-select" className="text-xs font-mono text-slate-400 block">Objective Function</label>
-              <select
-                id="strategy-select"
-                value={strategy}
-                onChange={(e) => setStrategy(e.target.value as any)}
-                className="w-full bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            {/* Run Button */}
+            <div>
+              <button
+                type="submit"
+                disabled={submitting}
+                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/40 hover:border-[#3DD6C4] text-sm font-mono font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
-                <option value="max_revenue">Maximize Protected Revenue</option>
-                <option value="cost_efficiency">Cost Efficiency (ROI)</option>
-                <option value="tier_weighted">Tier-1 Criticality Weighted</option>
-              </select>
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Executing PuLP Solver...</span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span>Run Optimization</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
 
+          {/* Validation / API Error Alert */}
           {submitError && (
-            <div className="p-3 rounded-lg bg-red-950/50 border border-red-800/60 text-red-300 text-xs flex items-center gap-2">
+            <div
+              role="alert"
+              className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center space-x-2"
+            >
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
             </div>
           )}
-
-          <div className="flex items-center justify-between pt-2">
-            <span className="text-xs text-slate-400 font-mono">
-              Algorithm: 0-1 Binary Knapsack LP (PuLP CBC Solver)
-            </span>
-            <button
-              type="submit"
-              disabled={submitting}
-              className="inline-flex items-center space-x-2 px-4 py-2 rounded-lg bg-[#1E2C48] hover:bg-[#283B60] text-[#3DD6C4] border border-[#3DD6C4]/40 hover:border-[#3DD6C4] text-xs font-mono font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  <span>Solving PuLP Model...</span>
-                </>
-              ) : (
-                <>
-                  <Play className="w-3.5 h-3.5" />
-                  <span>Execute Optimization</span>
-                </>
-              )}
-            </button>
-          </div>
         </form>
       </div>
 
-      {/* Plan Results Section */}
-      {!hasPlan ? (
+      {/* 2. Results Container */}
+      {!activePlan ? (
         <EmptyState
-          icon={<SlidersHorizontal className="w-6 h-6" />}
-          title="No optimization plan generated"
-          description="Enter a recovery budget above and execute the PuLP LP solver to determine which at-risk suppliers should be mitigated first."
+          icon={<SlidersHorizontal className="w-6 h-6 text-[#3DD6C4]" />}
+          title="No Optimization Plan Yet"
+          description="Enter an available recovery budget above and execute the mathematical optimizer to derive the highest-value supplier mitigation portfolio."
         />
       ) : (
         <div className="space-y-6">
-          {/* Plan KPI Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              label="Allocated Capital"
-              value={`$${plan!.total_budget_used.toLocaleString()}`}
-              subtext={`From $${plan!.budget.toLocaleString()} requested budget`}
-              variant="info"
-              icon={<DollarSign className="w-5 h-5" />}
-            />
-            <StatCard
-              label="Remaining Capital"
-              value={`$${plan!.remaining_budget.toLocaleString()}`}
-              subtext="Unallocated budget cushion"
-              icon={<DollarSign className="w-5 h-5" />}
-            />
-            <StatCard
-              label="Protected Revenue"
-              value={`$${plan!.total_expected_protected_revenue.toLocaleString()}`}
-              subtext="Expected business value secured"
-              variant="success"
-              icon={<TrendingUp className="w-5 h-5" />}
-            />
-            <StatCard
-              label="Prioritized Nodes"
-              value={`${plan!.selected_count} Actions`}
-              subtext={`Solver Status: ${plan!.optimization_status}`}
-              variant="default"
-              icon={<ShieldCheck className="w-5 h-5" />}
-            />
+          {/* Plan Origin Banner */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] text-xs font-mono">
+            <div className="flex items-center space-x-2">
+              {planOrigin === 'new_run' ? (
+                <>
+                  <span className="w-2 h-2 rounded-full bg-[#10B981] animate-pulse" />
+                  <span className="font-bold text-[#10B981] uppercase tracking-wide">
+                    New Optimization Result
+                  </span>
+                  <span className="text-slate-400">• Status: {activePlan.optimization_status}</span>
+                </>
+              ) : (
+                <>
+                  <Clock className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="font-bold text-indigo-300 uppercase tracking-wide">
+                    Latest Persisted Decision Plan
+                  </span>
+                  <span className="text-slate-400">
+                    • Persisted at: {new Date(activePlan.generated_at).toLocaleString()}
+                  </span>
+                </>
+              )}
+            </div>
+
+            {activePlan.plan_id && (
+              <span className="text-[11px] text-slate-400">
+                Plan ID: <code>{activePlan.plan_id.slice(0, 8)}...</code>
+              </span>
+            )}
           </div>
 
-          {/* Selected Supplier Actions Table */}
-          <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl overflow-hidden shadow-sm">
-            <div className="p-4 border-b border-[#1E2C48] flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-white">Optimal Mitigation Allocations</h3>
-                <p className="text-xs text-slate-400">
-                  Ranked subset of suppliers yielding the greatest ROI under budget constraint
+          {/* Value Protected Hero & Key Decision KPIs */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {/* Primary Hero: Expected Protected Revenue */}
+            <div className="lg:col-span-2 bg-[#111A2E]/90 border border-[#1E2C48] rounded-xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                  <TrendingUp className="w-4 h-4 text-emerald-400" />
+                  Expected Protected Business Value
+                </span>
+                <span className="text-xs font-mono font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded">
+                  Maximized Objective
+                </span>
+              </div>
+
+              <div className="my-2">
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-bold font-mono tracking-tight text-emerald-400">
+                  <AnimatedCurrency
+                    value={activePlan.total_expected_protected_revenue}
+                    reducedMotion={reducedMotion}
+                  />
+                </div>
+                <p className="text-xs text-slate-400 mt-2">
+                  Total revenue shielded from supply disruption across{' '}
+                  <strong className="text-slate-200">{activePlan.selected_count}</strong> prioritized
+                  supplier actions under the ${activePlan.budget.toLocaleString()} capital cap.
                 </p>
               </div>
-              <span className="text-xs font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded">
-                Optimal Solution
+
+              <div className="pt-3 border-t border-[#1E2C48]/60 flex items-center justify-between text-xs font-mono text-slate-400">
+                <span>PuLP Objective Value:</span>
+                <span className="font-semibold text-slate-200">
+                  ${activePlan.objective_value.toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Decision Portfolio Counts */}
+            <div className="bg-[#111A2E]/90 border border-[#1E2C48] rounded-xl p-6 flex flex-col justify-between shadow-sm">
+              <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-2">
+                <ShieldCheck className="w-4 h-4 text-[#3DD6C4]" />
+                Portfolio Summary
+              </span>
+
+              <div className="space-y-3 my-1">
+                <div className="flex items-baseline justify-between">
+                  <span className="text-xs text-slate-400">Prioritized Actions:</span>
+                  <span className="text-2xl font-bold font-mono text-white">
+                    {activePlan.selected_count} Nodes
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between text-xs font-mono">
+                  <span className="text-slate-400">Requested Budget:</span>
+                  <span className="text-slate-300">${activePlan.budget.toLocaleString()}</span>
+                </div>
+                <div className="flex items-baseline justify-between text-xs font-mono">
+                  <span className="text-slate-400">Capital Allocated:</span>
+                  <span className="text-[#3DD6C4] font-semibold">
+                    ${activePlan.total_budget_used.toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-baseline justify-between text-xs font-mono">
+                  <span className="text-slate-400">Budget Cushion:</span>
+                  <span className="text-slate-300">
+                    ${activePlan.remaining_budget.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 text-[11px] text-slate-400 border-t border-[#1E2C48]/60">
+                Exact binary knapsack allocation guaranteeing 0 budget overshoot.
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Animated Budget Utilization Bar */}
+          <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 shadow-sm space-y-3">
+            <div className="flex items-center justify-between text-xs font-mono">
+              <span className="text-slate-300 font-semibold flex items-center gap-1.5">
+                <DollarSign className="w-3.5 h-3.5 text-[#3DD6C4]" />
+                Capital Budget Utilization
+              </span>
+              <span className="text-slate-200 font-bold">
+                {utilization.pct.toFixed(1)}% Allocated
               </span>
             </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm border-collapse">
-                <thead>
-                  <tr className="border-b border-[#1E2C48] bg-[#0E1626] text-slate-400 text-xs font-mono uppercase tracking-wider">
-                    <th className="py-3 px-4 font-semibold">Prioritized Supplier</th>
-                    <th className="py-3 px-4 font-semibold text-center">Criticality</th>
-                    <th className="py-3 px-4 font-semibold text-center">Risk Score</th>
-                    <th className="py-3 px-4 font-semibold text-right">Mitigation Cost</th>
-                    <th className="py-3 px-4 font-semibold text-right">Protected Revenue</th>
-                    <th className="py-3 px-4 font-semibold text-center">ROI Multiple</th>
-                    <th className="py-3 px-4 font-semibold">Mathematical Justification</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#182338]">
-                  {plan!.selected_suppliers.map((item) => (
-                    <tr key={item.supplier_id} className="hover:bg-[#152035]/60 transition-colors">
-                      <td className="py-3.5 px-4 font-medium text-slate-100">
-                        <span className="font-semibold block">{item.supplier_name}</span>
-                        <span className="text-[11px] font-mono text-slate-400">
-                          Spend: ${item.annual_spend.toLocaleString()} • {item.dependency_impact.toFixed(1)}x impact
-                        </span>
-                      </td>
+            {/* Visual Animated Track */}
+            <div className="w-full h-3 bg-[#0B1120] border border-[#1E2C48] rounded-full overflow-hidden p-0.5">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${utilization.pct}%` }}
+                transition={{
+                  duration: reducedMotion ? 0 : 0.25,
+                  ease: 'easeOut',
+                }}
+                className={`h-full rounded-full ${
+                  utilization.pct >= 90
+                    ? 'bg-gradient-to-r from-[#3DD6C4] to-[#10B981]'
+                    : utilization.pct >= 50
+                      ? 'bg-gradient-to-r from-[#6366F1] to-[#3DD6C4]'
+                      : 'bg-[#3DD6C4]'
+                }`}
+              />
+            </div>
 
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/60 text-rose-300 border border-rose-800/60">
-                          Tier {item.criticality_tier}
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        <RiskBadge score={item.current_risk_score} size="sm" />
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right font-mono text-xs text-slate-300">
-                        ${item.mitigation_cost.toLocaleString()}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-right font-mono text-xs font-bold text-emerald-400">
-                        ${item.expected_protected_revenue.toLocaleString()}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-indigo-950/60 text-indigo-300 border border-indigo-800/60">
-                          {item.efficiency_ratio.toFixed(1)}x ROI
-                        </span>
-                      </td>
-
-                      <td className="py-3.5 px-4 text-xs text-slate-300 leading-relaxed max-w-sm">
-                        {item.reason}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* Metric pill breakdown */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs font-mono">
+              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+                <span className="text-slate-400">Total Cap:</span>
+                <span className="font-semibold text-white">
+                  ${utilization.total.toLocaleString()}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+                <span className="text-slate-400">Used:</span>
+                <span className="font-semibold text-[#3DD6C4]">
+                  ${utilization.used.toLocaleString()}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+                <span className="text-slate-400">Remaining Cushion:</span>
+                <span className="font-semibold text-slate-300">
+                  ${utilization.remaining.toLocaleString()}
+                </span>
+              </div>
             </div>
           </div>
+
+          {/* 4. Selected Supplier Mitigation Actions */}
+          {activePlan.selected_count === 0 ? (
+            /* Meaningful Zero-Selection State */
+            <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-8 text-center space-y-3">
+              <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <h3 className="text-base font-semibold text-white">
+                No Mitigation Actions Selected Under Budget
+              </h3>
+              <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
+                The requested capital budget of ${activePlan.budget.toLocaleString()} was either $0
+                or insufficient to execute the minimum required technical mitigation action for any
+                at-risk supplier in this network. Try entering a larger budget constraint (e.g. $100,000+).
+              </p>
+              <button
+                type="button"
+                onClick={() => setBudgetInput('250000')}
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/30 text-xs font-mono transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Try $250,000 Budget</span>
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-base font-bold text-white tracking-tight">
+                    Optimal Prioritized Supplier Actions ({activePlan.selected_count})
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Decision sequence: Risk Status → Mitigation Cost → Protected Value → Efficiency ROI Multiple → Rationale
+                  </p>
+                </div>
+                <span className="text-xs font-mono text-slate-400 bg-[#0E1626] border border-[#1E2C48] px-2.5 py-1 rounded">
+                  Ranked by Solver Objective
+                </span>
+              </div>
+
+              {/* Action Cards Grid */}
+              <div className="space-y-3.5">
+                {activePlan.selected_suppliers.map((item, index) => (
+                  <motion.div
+                    key={item.supplier_id}
+                    initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.2,
+                      delay: reducedMotion ? 0 : index * 0.04,
+                    }}
+                    className="bg-[#111A2E]/80 border border-[#1E2C48] hover:border-[#2C3E63] rounded-xl p-5 shadow-sm transition-all"
+                  >
+                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                      {/* Left: Supplier Identity & Critical Metrics */}
+                      <div className="space-y-3 flex-1">
+                        {/* Title Bar */}
+                        <div className="flex flex-wrap items-center gap-2.5">
+                          <span className="text-xs font-mono font-bold bg-[#18253E] text-slate-300 px-2 py-0.5 rounded border border-[#233352]">
+                            #{index + 1}
+                          </span>
+                          <h4 className="text-lg font-bold text-white tracking-tight">
+                            {item.supplier_name}
+                          </h4>
+                          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/60 text-rose-300 border border-rose-800/60">
+                            Tier {item.criticality_tier}
+                          </span>
+                          <RiskBadge score={item.current_risk_score} size="sm" />
+                        </div>
+
+                        {/* Financial & Operational Parameters */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
+                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                            <span className="text-[10px] text-slate-400 block uppercase">
+                              Mitigation Cost
+                            </span>
+                            <span className="text-sm font-bold text-white">
+                              ${item.mitigation_cost.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                            <span className="text-[10px] text-slate-400 block uppercase">
+                              Protected Revenue
+                            </span>
+                            <span className="text-sm font-bold text-emerald-400">
+                              ${item.expected_protected_revenue.toLocaleString()}
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                            <span className="text-[10px] text-slate-400 block uppercase">
+                              Value-Efficiency
+                            </span>
+                            <span className="text-sm font-bold text-indigo-400">
+                              {item.efficiency_ratio.toFixed(1)}x ROI
+                            </span>
+                          </div>
+
+                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                            <span className="text-[10px] text-slate-400 block uppercase">
+                              Spend Exposure
+                            </span>
+                            <span className="text-sm font-bold text-slate-300">
+                              ${item.annual_spend.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Deterministic Explanation Callout */}
+                        <div className="p-3 rounded-lg bg-[#0D1527] border border-[#1E2C48] text-xs leading-relaxed space-y-1">
+                          <div className="flex items-center space-x-1.5 text-slate-400 font-mono text-[10px] uppercase tracking-wider font-semibold">
+                            <Info className="w-3.5 h-3.5 text-[#3DD6C4]" />
+                            <span>Mathematical Justification (Deterministic)</span>
+                          </div>
+                          <p className="text-slate-200">{item.reason}</p>
+                        </div>
+                      </div>
+
+                      {/* Right: Operational Actions */}
+                      <div className="flex sm:flex-row lg:flex-col items-center sm:justify-end gap-2 shrink-0 pt-2 lg:pt-0">
+                        {/* Inspect in Network */}
+                        <Link
+                          to={`/network?select=${item.supplier_id}`}
+                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-[#3DD6C4] border border-[#233352] hover:border-[#3DD6C4]/40 text-xs font-mono font-medium transition-colors"
+                          title="Locate and focus this node on the interactive dependency graph"
+                        >
+                          <Network className="w-3.5 h-3.5" />
+                          <span>Inspect in Network</span>
+                        </Link>
+
+                        {/* View Supplier Detail */}
+                        <Link
+                          to={`/suppliers/${item.supplier_id}`}
+                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-slate-200 hover:text-white border border-[#233352] text-xs font-mono font-medium transition-colors"
+                          title="Open historical telemetry, contributing factors, and dependencies"
+                        >
+                          <span>Telemetry Detail</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

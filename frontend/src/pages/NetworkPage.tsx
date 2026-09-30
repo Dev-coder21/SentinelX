@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Network as NetworkIcon,
   RefreshCw,
@@ -318,15 +318,34 @@ export const NetworkPage: React.FC = () => {
     }
   }
 
-  // Initial auto-fit after data load
+  // Preselected node from URL parameter (e.g. from Prioritization page)
+  const [searchParams] = useSearchParams()
+  const preselectId = searchParams.get('select')
+
+  // Initial auto-fit or auto-focus preselected node after data load
   useEffect(() => {
     if (filteredData.nodes.length > 0 && fgRef.current) {
+      if (preselectId) {
+        const found = filteredData.nodes.find((n) => n.id === preselectId)
+        if (found) {
+          const timer = setTimeout(() => {
+            setSelectedNode(found)
+            if (typeof found.x === 'number' && typeof found.y === 'number') {
+              fgRef.current?.centerAt(found.x, found.y, 500)
+              fgRef.current?.zoom(2.2, 500)
+            } else {
+              fgRef.current?.zoomToFit(600, 40)
+            }
+          }, 350)
+          return () => clearTimeout(timer)
+        }
+      }
       const timer = setTimeout(() => {
         fgRef.current?.zoomToFit(600, 40)
       }, 500)
       return () => clearTimeout(timer)
     }
-  }, [filteredData.nodes.length])
+  }, [filteredData.nodes, preselectId])
 
   // Custom Canvas Rendering for Nodes
   const renderNode = useCallback(
