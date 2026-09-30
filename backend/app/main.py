@@ -5,6 +5,7 @@ from app.core.config import settings
 from app.api.health import router as health_router
 from app.api.suppliers import router as suppliers_router
 from app.api.network import router as network_router
+from app.api.risk_events import router as risk_events_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -24,15 +25,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root-level endpoints (/health, /suppliers, /network)
+# Root-level endpoints (/health, /suppliers, /network, /risk-events)
 app.include_router(health_router)
 app.include_router(suppliers_router)
 app.include_router(network_router)
+app.include_router(risk_events_router)
 
-# Versioned API endpoints (/api/v1/health, /api/v1/suppliers, /api/v1/network)
+# Versioned API endpoints (/api/v1/health, /api/v1/suppliers, /api/v1/network, /api/v1/risk-events)
 app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(suppliers_router, prefix=settings.API_V1_STR)
 app.include_router(network_router, prefix=settings.API_V1_STR)
+app.include_router(risk_events_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Root"])
@@ -44,6 +47,7 @@ def root():
         "health": "/health",
         "suppliers": "/suppliers",
         "network": "/network",
+        "risk_events": "/risk-events",
     }
 
 

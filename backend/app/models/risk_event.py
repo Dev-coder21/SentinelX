@@ -21,6 +21,7 @@ class RiskEvent(Base):
         index=True,
     )
     raw_url = Column(String(1000), nullable=True)
+    fingerprint = Column(String(64), nullable=True, unique=True, index=True)
 
     def __repr__(self) -> str:
         return f"<RiskEvent(region='{self.region}', source='{self.source}', headline='{self.headline[:30]}...')>"
