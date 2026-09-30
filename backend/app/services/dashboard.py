@@ -215,7 +215,7 @@ def get_dashboard_summary(db: Session, current_time: Optional[datetime] = None) 
     trend_rows = (
         db.query(
             RiskScore.timestamp,
-            func.round(func.avg(RiskScore.risk_score), 1).label("avg_risk"),
+            func.avg(RiskScore.risk_score).label("avg_risk"),
             func.sum(case((RiskScore.risk_score >= 70.0, 1), else_=0)).label("high_risk_cnt"),
             func.count(RiskScore.id).label("total_cnt"),
         )
@@ -228,7 +228,7 @@ def get_dashboard_summary(db: Session, current_time: Optional[datetime] = None) 
     risk_trend = [
         RiskTrendPoint(
             timestamp=row.timestamp,
-            average_risk=float(row.avg_risk or 0.0),
+            average_risk=round(float(row.avg_risk or 0.0), 1),
             high_risk_count=int(row.high_risk_cnt or 0),
             scored_supplier_count=int(row.total_cnt or 0),
         )

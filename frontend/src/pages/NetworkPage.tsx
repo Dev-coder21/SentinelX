@@ -16,7 +16,7 @@ import {
   Building2,
   HelpCircle,
 } from 'lucide-react'
-import { ForceGraph2D } from 'react-force-graph'
+import ForceGraph2D from 'react-force-graph-2d'
 import { motion, AnimatePresence } from 'framer-motion'
 import { apiClient } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
