@@ -160,7 +160,7 @@ export const PrioritizationPage: React.FC = () => {
       />
 
       {/* 1. Mitigation Budget Input & Solver Controls */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 shadow-sm">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5">
         <form onSubmit={handleRunOptimization} className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -190,7 +190,7 @@ export const PrioritizationPage: React.FC = () => {
                       type="button"
                       disabled={submitting}
                       onClick={() => setBudgetInput(String(preset.value))}
-                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#162036] hover:bg-[#1E2C48] text-slate-300 hover:text-[#3DD6C4] border border-[#233352] transition-colors"
+                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#080E1C] hover:bg-[#121D34] text-slate-300 hover:text-[#3DD6C4] border border-[#1E2E4E] transition-colors"
                     >
                       {preset.label}
                     </button>
@@ -209,7 +209,7 @@ export const PrioritizationPage: React.FC = () => {
                   value={budgetInput}
                   onChange={(e) => setBudgetInput(e.target.value)}
                   placeholder="500000"
-                  className="w-full pl-9 pr-4 py-2.5 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm font-mono text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4] disabled:opacity-50"
+                  className="w-full pl-9 pr-4 py-2.5 bg-[#080E1C] border border-[#1E2E4E] rounded-md text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4] focus:border-[#3DD6C4] disabled:opacity-50"
                 />
               </div>
             </div>
@@ -219,7 +219,7 @@ export const PrioritizationPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/40 hover:border-[#3DD6C4] text-sm font-mono font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-md bg-[#121D34] hover:bg-[#172644] text-[#3DD6C4] border border-[#233B62] hover:border-[#3DD6C4]/60 text-sm font-mono font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>
@@ -240,7 +240,7 @@ export const PrioritizationPage: React.FC = () => {
           {submitError && (
             <div
               role="alert"
-              className="p-3 rounded-lg bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center space-x-2"
+              className="p-3 rounded-md bg-rose-950/60 border border-rose-800/60 text-rose-300 text-xs flex items-center space-x-2"
             >
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{submitError}</span>
@@ -259,7 +259,7 @@ export const PrioritizationPage: React.FC = () => {
       ) : (
         <div className="space-y-6">
           {/* Plan Origin Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] text-xs font-mono">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2.5 rounded-md bg-[#080E1C] border border-[#1E2E4E] text-xs font-mono">
             <div className="flex items-center space-x-2">
               {planOrigin === 'new_run' ? (
                 <>
@@ -292,13 +292,13 @@ export const PrioritizationPage: React.FC = () => {
           {/* Value Protected Hero & Key Decision KPIs */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             {/* Primary Hero: Expected Protected Revenue */}
-            <div className="lg:col-span-2 bg-[#111A2E]/90 border border-[#1E2C48] rounded-xl p-6 relative overflow-hidden flex flex-col justify-between shadow-sm">
+            <div className="lg:col-span-2 bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-6 relative overflow-hidden flex flex-col justify-between">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
                   <TrendingUp className="w-4 h-4 text-emerald-400" />
                   Expected Protected Business Value
                 </span>
-                <span className="text-xs font-mono font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/50 px-2 py-0.5 rounded">
+                <span className="text-xs font-mono font-bold bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 px-2 py-0.5 rounded">
                   Maximized Objective
                 </span>
               </div>
@@ -317,7 +317,7 @@ export const PrioritizationPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="pt-3 border-t border-[#1E2C48]/60 flex items-center justify-between text-xs font-mono text-slate-400">
+              <div className="pt-3 border-t border-[#1E2E4E] flex items-center justify-between text-xs font-mono text-slate-400">
                 <span>PuLP Objective Value:</span>
                 <span className="font-semibold text-slate-200">
                   ${activePlan.objective_value.toLocaleString()}
@@ -326,7 +326,7 @@ export const PrioritizationPage: React.FC = () => {
             </div>
 
             {/* Decision Portfolio Counts */}
-            <div className="bg-[#111A2E]/90 border border-[#1E2C48] rounded-xl p-6 flex flex-col justify-between shadow-sm">
+            <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-6 flex flex-col justify-between">
               <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mb-2">
                 <ShieldCheck className="w-4 h-4 text-[#3DD6C4]" />
                 Portfolio Summary
@@ -357,14 +357,14 @@ export const PrioritizationPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-2 text-[11px] text-slate-400 border-t border-[#1E2C48]/60">
+              <div className="pt-2 text-[11px] text-slate-400 border-t border-[#1E2E4E]">
                 Exact binary knapsack allocation guaranteeing 0 budget overshoot.
               </div>
             </div>
           </div>
 
           {/* 3. Animated Budget Utilization Bar */}
-          <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 shadow-sm space-y-3">
+          <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5 space-y-3">
             <div className="flex items-center justify-between text-xs font-mono">
               <span className="text-slate-300 font-semibold flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-[#3DD6C4]" />
@@ -376,7 +376,7 @@ export const PrioritizationPage: React.FC = () => {
             </div>
 
             {/* Visual Animated Track */}
-            <div className="w-full h-3 bg-[#0B1120] border border-[#1E2C48] rounded-full overflow-hidden p-0.5">
+            <div className="w-full h-3 bg-[#080E1C] border border-[#1E2E4E] rounded-full overflow-hidden p-0.5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${utilization.pct}%` }}
@@ -396,19 +396,19 @@ export const PrioritizationPage: React.FC = () => {
 
             {/* Metric pill breakdown */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 text-xs font-mono">
-              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+              <div className="p-2.5 rounded-md bg-[#080E1C] border border-[#1E2E4E] flex justify-between items-center">
                 <span className="text-slate-400">Total Cap:</span>
                 <span className="font-semibold text-white">
                   ${utilization.total.toLocaleString()}
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+              <div className="p-2.5 rounded-md bg-[#080E1C] border border-[#1E2E4E] flex justify-between items-center">
                 <span className="text-slate-400">Used:</span>
                 <span className="font-semibold text-[#3DD6C4]">
                   ${utilization.used.toLocaleString()}
                 </span>
               </div>
-              <div className="p-2.5 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex justify-between items-center">
+              <div className="p-2.5 rounded-md bg-[#080E1C] border border-[#1E2E4E] flex justify-between items-center">
                 <span className="text-slate-400">Remaining Cushion:</span>
                 <span className="font-semibold text-slate-300">
                   ${utilization.remaining.toLocaleString()}
@@ -420,7 +420,7 @@ export const PrioritizationPage: React.FC = () => {
           {/* 4. Selected Supplier Mitigation Actions */}
           {activePlan.selected_count === 0 ? (
             /* Meaningful Zero-Selection State */
-            <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-8 text-center space-y-3">
+            <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-8 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center mx-auto text-amber-400">
                 <AlertTriangle className="w-6 h-6" />
               </div>
@@ -435,7 +435,7 @@ export const PrioritizationPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setBudgetInput('250000')}
-                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/30 text-xs font-mono transition-colors"
+                className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#121D34] hover:bg-[#172644] text-[#3DD6C4] border border-[#1E2E4E] text-xs font-mono transition-colors"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Try $250,000 Budget</span>
@@ -452,7 +452,7 @@ export const PrioritizationPage: React.FC = () => {
                     Decision sequence: Risk Status → Mitigation Cost → Protected Value → Efficiency ROI Multiple → Rationale
                   </p>
                 </div>
-                <span className="text-xs font-mono text-slate-400 bg-[#0E1626] border border-[#1E2C48] px-2.5 py-1 rounded">
+                <span className="text-xs font-mono text-slate-400 bg-[#080E1C] border border-[#1E2E4E] px-2.5 py-1 rounded">
                   Ranked by Solver Objective
                 </span>
               </div>
@@ -468,14 +468,14 @@ export const PrioritizationPage: React.FC = () => {
                       duration: reducedMotion ? 0 : 0.2,
                       delay: reducedMotion ? 0 : index * 0.04,
                     }}
-                    className="bg-[#111A2E]/80 border border-[#1E2C48] hover:border-[#2C3E63] rounded-xl p-5 shadow-sm transition-all"
+                    className="bg-[#0D1628] border border-[#1E2E4E] hover:border-[#283E66] rounded-lg p-5 transition-all"
                   >
                     <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
                       {/* Left: Supplier Identity & Critical Metrics */}
                       <div className="space-y-3 flex-1">
                         {/* Title Bar */}
                         <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="text-xs font-mono font-bold bg-[#18253E] text-slate-300 px-2 py-0.5 rounded border border-[#233352]">
+                          <span className="text-xs font-mono font-bold bg-[#121F38] text-slate-300 px-2 py-0.5 rounded border border-[#1E2E4E]">
                             #{index + 1}
                           </span>
                           <h4 className="text-lg font-bold text-white tracking-tight">
@@ -489,7 +489,7 @@ export const PrioritizationPage: React.FC = () => {
 
                         {/* Financial & Operational Parameters */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
-                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                          <div className="p-2 rounded-md bg-[#080E1C] border border-[#1E2E4E]">
                             <span className="text-[10px] text-slate-400 block uppercase">
                               Mitigation Cost
                             </span>
@@ -498,7 +498,7 @@ export const PrioritizationPage: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                          <div className="p-2 rounded-md bg-[#080E1C] border border-[#1E2E4E]">
                             <span className="text-[10px] text-slate-400 block uppercase">
                               Protected Revenue
                             </span>
@@ -507,7 +507,7 @@ export const PrioritizationPage: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                          <div className="p-2 rounded-md bg-[#080E1C] border border-[#1E2E4E]">
                             <span className="text-[10px] text-slate-400 block uppercase">
                               Value-Efficiency
                             </span>
@@ -516,7 +516,7 @@ export const PrioritizationPage: React.FC = () => {
                             </span>
                           </div>
 
-                          <div className="p-2 rounded bg-[#0E1626] border border-[#1E2C48]/80">
+                          <div className="p-2 rounded-md bg-[#080E1C] border border-[#1E2E4E]">
                             <span className="text-[10px] text-slate-400 block uppercase">
                               Spend Exposure
                             </span>
@@ -527,7 +527,7 @@ export const PrioritizationPage: React.FC = () => {
                         </div>
 
                         {/* Deterministic Explanation Callout */}
-                        <div className="p-3 rounded-lg bg-[#0D1527] border border-[#1E2C48] text-xs leading-relaxed space-y-1">
+                        <div className="p-3 rounded-md bg-[#080E1C] border border-[#1E2E4E] text-xs leading-relaxed space-y-1">
                           <div className="flex items-center space-x-1.5 text-slate-400 font-mono text-[10px] uppercase tracking-wider font-semibold">
                             <Info className="w-3.5 h-3.5 text-[#3DD6C4]" />
                             <span>Mathematical Justification (Deterministic)</span>
@@ -541,7 +541,7 @@ export const PrioritizationPage: React.FC = () => {
                         {/* Inspect in Network */}
                         <Link
                           to={`/network?select=${item.supplier_id}`}
-                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-[#3DD6C4] border border-[#233352] hover:border-[#3DD6C4]/40 text-xs font-mono font-medium transition-colors"
+                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-md bg-[#121D34] hover:bg-[#172644] text-[#3DD6C4] border border-[#1E2E4E] hover:border-[#3DD6C4]/40 text-xs font-mono font-medium transition-colors"
                           title="Locate and focus this node on the interactive dependency graph"
                         >
                           <Network className="w-3.5 h-3.5" />
@@ -551,7 +551,7 @@ export const PrioritizationPage: React.FC = () => {
                         {/* View Supplier Detail */}
                         <Link
                           to={`/suppliers/${item.supplier_id}`}
-                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-slate-200 hover:text-white border border-[#233352] text-xs font-mono font-medium transition-colors"
+                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-md bg-[#121D34] hover:bg-[#172644] text-slate-200 hover:text-white border border-[#1E2E4E] text-xs font-mono font-medium transition-colors"
                           title="Open historical telemetry, contributing factors, and dependencies"
                         >
                           <span>Telemetry Detail</span>

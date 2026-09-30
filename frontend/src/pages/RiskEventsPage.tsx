@@ -180,7 +180,7 @@ export const RiskEventsPage: React.FC = () => {
         subtitle="External real-world signals normalized from GDELT global news and Open-Meteo severe weather."
         badge={
           events ? (
-            <span className="text-xs font-mono bg-[#162036] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2C48]">
+            <span className="text-xs font-mono bg-[#121F38] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2E4E]">
               {filteredEvents.length} of {events.length} Signals
             </span>
           ) : undefined
@@ -189,7 +189,7 @@ export const RiskEventsPage: React.FC = () => {
           <button
             type="button"
             onClick={refetch}
-            className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            className="inline-flex items-center space-x-2 px-3 py-1.5 rounded-md bg-[#121D34] hover:bg-[#172644] text-slate-300 hover:text-white border border-[#1E2E4E] text-xs font-mono transition-colors"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Refetch Signals</span>
@@ -198,7 +198,7 @@ export const RiskEventsPage: React.FC = () => {
       />
 
       {/* Filter and Search Controls */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4 space-y-3">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-4 space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
@@ -208,7 +208,7 @@ export const RiskEventsPage: React.FC = () => {
               placeholder="Search headline, summary, region, or signal type..."
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
+              className="w-full pl-9 pr-4 py-2 bg-[#080E1C] border border-[#1E2E4E] rounded-md text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4] focus:border-[#3DD6C4]"
             />
             {search && (
               <button
@@ -234,7 +234,7 @@ export const RiskEventsPage: React.FC = () => {
               aria-label="Filter events by corridor region"
               value={selectedRegion}
               onChange={(e) => handleRegionChange(e.target.value)}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:border-[#3DD6C4]"
             >
               <option value="all">All Corridors</option>
               <option value="East Asia">East Asia</option>
@@ -248,7 +248,7 @@ export const RiskEventsPage: React.FC = () => {
               aria-label="Filter events by intelligence source"
               value={selectedSource}
               onChange={(e) => handleSourceChange(e.target.value)}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:border-[#3DD6C4]"
             >
               <option value="all">All Sources</option>
               <option value="GDELT">GDELT News</option>
@@ -261,7 +261,7 @@ export const RiskEventsPage: React.FC = () => {
                 aria-label="Filter events by disruption type"
                 value={selectedType}
                 onChange={(e) => handleTypeChange(e.target.value)}
-                className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+                className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:border-[#3DD6C4]"
               >
                 <option value="all">All Event Types</option>
                 {eventTypes.map((t) => (
@@ -277,7 +277,7 @@ export const RiskEventsPage: React.FC = () => {
               aria-label="Filter events by minimum severity"
               value={selectedSeverity}
               onChange={(e) => handleSeverityChange(e.target.value)}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 font-mono"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:border-[#3DD6C4] font-mono"
             >
               <option value="all">All Severities</option>
               <option value="CRITICAL">Critical (≥ 80.0)</option>
@@ -290,7 +290,7 @@ export const RiskEventsPage: React.FC = () => {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-2 rounded-lg bg-[#0E1626] border border-[#1E2C48] transition-colors"
+                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-2 rounded-md bg-[#080E1C] border border-[#1E2E4E] transition-colors"
               >
                 Reset Filters
               </button>
@@ -313,13 +313,13 @@ export const RiskEventsPage: React.FC = () => {
           {paginatedEvents.map((evt: RiskEvent) => (
             <div
               key={evt.id}
-              className="bg-[#111A2E]/80 border border-[#1E2C48] hover:border-[#2C3E63] rounded-xl p-5 transition-colors"
+              className="bg-[#0D1628] border border-[#1E2E4E] hover:border-[#283E66] rounded-lg p-5 transition-colors"
             >
               <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                 <div className="space-y-2 flex-1">
                   {/* Badges / metadata */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase bg-[#18253E] text-slate-200 px-2 py-0.5 rounded border border-[#233352] font-semibold">
+                    <span className="text-[10px] font-mono uppercase bg-[#121F38] text-slate-200 px-2 py-0.5 rounded border border-[#1E2E4E] font-semibold">
                       {evt.event_type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs font-mono text-slate-400">
@@ -341,7 +341,7 @@ export const RiskEventsPage: React.FC = () => {
                         {evt.region}
                       </Link>
                     </span>
-                    <span className="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-slate-400 bg-[#080E1C] px-2 py-0.5 rounded border border-[#1E2E4E]">
                       {evt.source}
                     </span>
                   </div>
@@ -382,7 +382,7 @@ export const RiskEventsPage: React.FC = () => {
                 </div>
 
                 {/* Severity & Confidence */}
-                <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 bg-[#0E1626] border border-[#1E2C48] p-3 rounded-lg min-w-[110px] text-right font-mono">
+                <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 bg-[#080E1C] border border-[#1E2E4E] p-3 rounded-md min-w-[110px] text-right font-mono">
                   {typeof evt.severity === 'number' && (
                     <div>
                       <span className="text-[10px] text-slate-500 uppercase block">Severity</span>
@@ -410,7 +410,7 @@ export const RiskEventsPage: React.FC = () => {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-4 border-t border-[#1E2C48] text-xs font-mono text-slate-400">
+            <div className="flex items-center justify-between pt-4 border-t border-[#1E2E4E] text-xs font-mono text-slate-400">
               <div>
                 Showing Page <strong className="text-slate-200">{page + 1}</strong> of{' '}
                 <strong className="text-slate-200">{totalPages}</strong> ({filteredEvents.length} total events)
@@ -420,7 +420,7 @@ export const RiskEventsPage: React.FC = () => {
                   type="button"
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="px-3 py-1 rounded bg-[#0E1626] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
+                  className="px-3 py-1 rounded-md bg-[#080E1C] border border-[#1E2E4E] hover:bg-[#121D34] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
                 >
                   <ChevronLeft className="w-3.5 h-3.5" />
                   <span>Prev</span>
@@ -429,7 +429,7 @@ export const RiskEventsPage: React.FC = () => {
                   type="button"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  className="px-3 py-1 rounded bg-[#0E1626] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
+                  className="px-3 py-1 rounded-md bg-[#080E1C] border border-[#1E2E4E] hover:bg-[#121D34] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
                 >
                   <span>Next</span>
                   <ChevronRight className="w-3.5 h-3.5" />

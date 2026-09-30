@@ -35,6 +35,7 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
+import { CHART_THEME } from '@/lib/tokens'
 import type { ContributingFactors, TopEventDetail } from '@/types/api'
 
 export const SupplierDetailPage: React.FC = () => {
@@ -137,7 +138,7 @@ export const SupplierDetailPage: React.FC = () => {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             to={`/network?select=${supplier.id}`}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#0D1628] hover:bg-[#14233D] text-slate-300 hover:text-white border border-[#1E2E4E] text-xs font-mono transition-colors"
             title="Inspect supplier and blast-radius in dependency network"
           >
             <Share2 className="w-3.5 h-3.5 text-indigo-400" />
@@ -145,7 +146,7 @@ export const SupplierDetailPage: React.FC = () => {
           </Link>
           <Link
             to="/prioritization"
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#0D1628] hover:bg-[#14233D] text-slate-300 hover:text-white border border-[#1E2E4E] text-xs font-mono transition-colors"
             title="Optimize mitigation allocations"
           >
             <SlidersHorizontal className="w-3.5 h-3.5 text-[#3DD6C4]" />
@@ -153,7 +154,7 @@ export const SupplierDetailPage: React.FC = () => {
           </Link>
           <Link
             to={`/risk-events?region=${encodeURIComponent(supplier.region)}`}
-            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#0D1628] hover:bg-[#14233D] text-slate-300 hover:text-white border border-[#1E2E4E] text-xs font-mono transition-colors"
             title="View signals in this corridor"
           >
             <Compass className="w-3.5 h-3.5 text-amber-400" />
@@ -163,12 +164,12 @@ export const SupplierDetailPage: React.FC = () => {
       </div>
 
       {/* Header Profile Card */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-6">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="space-y-2">
             <div className="flex flex-wrap items-center gap-3">
-              <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                <Building2 className="w-6 h-6 text-[#3DD6C4]" />
+              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight flex items-center gap-2 font-sans">
+                <Building2 className="w-5 h-5 text-[#3DD6C4]" />
                 {supplier.name}
               </h1>
               <RiskBadge
@@ -178,12 +179,12 @@ export const SupplierDetailPage: React.FC = () => {
               />
             </div>
 
-            <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400 font-mono">
               <span className="flex items-center gap-1.5">
-                <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                <MapPin className="w-3.5 h-3.5 text-slate-500" />
                 <Link
                   to={`/suppliers?region=${encodeURIComponent(supplier.region)}`}
-                  className="text-slate-200 hover:text-[#3DD6C4] underline underline-offset-2"
+                  className="text-slate-300 hover:text-[#3DD6C4] underline underline-offset-2"
                 >
                   {supplier.region}
                 </Link>{' '}
@@ -191,14 +192,14 @@ export const SupplierDetailPage: React.FC = () => {
               </span>
               <span>•</span>
               <span className="flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-slate-400" />
-                Category: <strong className="text-slate-300">{supplier.category}</strong>
+                <Layers className="w-3.5 h-3.5 text-slate-500" />
+                Category: <strong className="text-slate-300 font-sans">{supplier.category}</strong>
               </span>
               <span>•</span>
               <span className="flex items-center gap-1.5">
-                <DollarSign className="w-3.5 h-3.5 text-slate-400" />
+                <DollarSign className="w-3.5 h-3.5 text-slate-500" />
                 Annual Spend:{' '}
-                <strong className="text-slate-300 font-mono">
+                <strong className="text-slate-200 font-mono">
                   ${supplier.annual_spend.toLocaleString()}
                 </strong>
               </span>
@@ -206,7 +207,7 @@ export const SupplierDetailPage: React.FC = () => {
           </div>
 
           {/* Criticality & Trend Stats */}
-          <div className="flex items-center gap-4 bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3 shrink-0">
+          <div className="flex items-center gap-3 bg-[#080E1C] border border-[#1E2E4E] rounded-md p-2.5 shrink-0">
             <div>
               <span className="text-[10px] font-mono uppercase text-slate-400 block">Criticality</span>
               <span
@@ -222,13 +223,13 @@ export const SupplierDetailPage: React.FC = () => {
               </span>
             </div>
 
-            <div className="border-l border-[#1E2C48] pl-4">
+            <div className="border-l border-[#1E2E4E] pl-3">
               <span className="text-[10px] font-mono uppercase text-slate-400 block">Risk Trend</span>
               <div className="mt-0.5">{renderTrendIcon()}</div>
             </div>
 
             {typeof supplier.previous_risk_score === 'number' && (
-              <div className="border-l border-[#1E2C48] pl-4">
+              <div className="border-l border-[#1E2E4E] pl-3">
                 <span className="text-[10px] font-mono uppercase text-slate-400 block">Previous</span>
                 <span className="text-xs font-mono text-slate-300 mt-0.5 block">
                   {supplier.previous_risk_score.toFixed(1)}
@@ -240,8 +241,8 @@ export const SupplierDetailPage: React.FC = () => {
       </div>
 
       {/* Mathematical Explainability: Contributing Risk Factors */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1E2C48] pb-3">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1E2E4E] pb-3">
           <div>
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-[#3DD6C4]" />
@@ -251,7 +252,7 @@ export const SupplierDetailPage: React.FC = () => {
               Deterministic fusion formula: Raw time-decayed corridor signals amplified by supplier criticality tier
             </p>
           </div>
-          <span className="text-xs font-mono text-slate-400 bg-[#0E1626] px-2.5 py-1 rounded border border-[#1E2C48] self-start sm:self-auto">
+          <span className="text-xs font-mono text-slate-400 bg-[#080E1C] px-2.5 py-1 rounded border border-[#1E2E4E] self-start sm:self-auto">
             {eventCount} Correlated Signal{eventCount !== 1 ? 's' : ''}
           </span>
         </div>
@@ -259,42 +260,42 @@ export const SupplierDetailPage: React.FC = () => {
         {/* 1. Mathematical Derivation Hierarchy */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
           {/* Raw Risk */}
-          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+          <div className="bg-[#080E1C] border border-[#1E2E4E] rounded-md p-3 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
               Raw Signal Exposure
             </span>
             <span className="text-xl font-bold font-mono text-slate-200">
               {rawRisk !== null ? rawRisk.toFixed(1) : '—'}
             </span>
-            <span className="text-[11px] text-slate-500 block mt-0.5">Sublinear saturation</span>
+            <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">Sublinear saturation</span>
           </div>
 
           {/* Multiplication Operator */}
-          <div className="text-center text-slate-500 font-mono text-lg font-bold hidden md:block">
+          <div className="text-center text-slate-500 font-mono text-base font-bold hidden md:block">
             ×
           </div>
 
           {/* Criticality Multiplier */}
-          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+          <div className="bg-[#080E1C] border border-[#1E2E4E] rounded-md p-3 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
               Tier {supplier.criticality_tier} Multiplier
             </span>
             <span className="text-xl font-bold font-mono text-indigo-400">
               {multiplier.toFixed(1)}×
             </span>
-            <span className="text-[11px] text-slate-500 block mt-0.5">
+            <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">
               {supplier.criticality_tier === 1 ? 'Primary Component' : supplier.criticality_tier === 2 ? 'Secondary Component' : 'Commodity'}
             </span>
           </div>
 
           {/* Equal Operator */}
-          <div className="text-center text-slate-500 font-mono text-lg font-bold hidden md:block">
+          <div className="text-center text-slate-500 font-mono text-base font-bold hidden md:block">
             =
           </div>
 
           {/* Final Fused Score */}
-          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
-            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+          <div className="bg-[#080E1C] border border-[#1E2E4E] rounded-md p-3 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-0.5">
               Fused Supplier Risk
             </span>
             <span
@@ -303,16 +304,16 @@ export const SupplierDetailPage: React.FC = () => {
             >
               {typeof finalScore === 'number' ? finalScore.toFixed(1) : '0.0'}
             </span>
-            <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">
+            <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
               / 100 ({getRiskLevel(finalScore)})
             </span>
           </div>
         </div>
 
         {/* 2. Sub-factor breakdown: News vs Weather & Event Categories */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
           {/* News and Weather Contributions */}
-          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-4 space-y-3">
+          <div className="bg-[#080E1C] border border-[#1E2E4E] rounded-md p-3.5 space-y-3">
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
               Signal Source Attribution
             </h3>
@@ -324,9 +325,9 @@ export const SupplierDetailPage: React.FC = () => {
                   <Newspaper className="w-3.5 h-3.5 text-blue-400" />
                   GDELT Geopolitical / News Signals
                 </span>
-                <span className="text-slate-300 font-bold">{newsRisk.toFixed(1)} / 100</span>
+                <span className="text-slate-200 font-bold">{newsRisk.toFixed(1)} / 100</span>
               </div>
-              <div className="w-full bg-[#182338] h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-[#121F38] h-1.5 rounded-full overflow-hidden">
                 <div
                   className="bg-blue-400 h-full rounded-full transition-all"
                   style={{ width: `${Math.min(100, newsRisk)}%` }}
@@ -341,9 +342,9 @@ export const SupplierDetailPage: React.FC = () => {
                   <CloudRain className="w-3.5 h-3.5 text-teal-400" />
                   Open-Meteo Severe Weather / Climate
                 </span>
-                <span className="text-slate-300 font-bold">{weatherRisk.toFixed(1)} / 100</span>
+                <span className="text-slate-200 font-bold">{weatherRisk.toFixed(1)} / 100</span>
               </div>
-              <div className="w-full bg-[#182338] h-2 rounded-full overflow-hidden">
+              <div className="w-full bg-[#121F38] h-1.5 rounded-full overflow-hidden">
                 <div
                   className="bg-teal-400 h-full rounded-full transition-all"
                   style={{ width: `${Math.min(100, weatherRisk)}%` }}
@@ -353,23 +354,23 @@ export const SupplierDetailPage: React.FC = () => {
           </div>
 
           {/* Classified Disruption Categories */}
-          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-4 space-y-2.5">
+          <div className="bg-[#080E1C] border border-[#1E2E4E] rounded-md p-3.5 space-y-2">
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
               Detected Disruption Types ({eventTypes.length})
             </h3>
             {eventTypes.length > 0 ? (
-              <div className="flex flex-wrap gap-2 pt-1">
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
                 {eventTypes.map((t) => (
                   <span
                     key={t}
-                    className="inline-flex items-center px-2.5 py-1 rounded text-xs font-mono bg-[#16253B] text-slate-200 border border-[#233959]"
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono bg-[#121F38] text-slate-200 border border-[#1E2E4E]"
                   >
                     {t.replace(/_/g, ' ')}
                   </span>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 pt-2">
+              <p className="text-xs text-slate-500 pt-1 font-mono">
                 No active external disruptions classified in this corridor.
               </p>
             )}
@@ -382,21 +383,21 @@ export const SupplierDetailPage: React.FC = () => {
             <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
               Top Contributing Real-World Risk Signals
             </h3>
-            <div className="overflow-x-auto">
+            <div className="overflow-x-auto border border-[#1E2E4E] rounded-md">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-[#1E2C48] text-slate-400 font-mono uppercase tracking-wider">
-                    <th className="pb-2 font-semibold">Signal Headline</th>
-                    <th className="pb-2 font-semibold">Type</th>
-                    <th className="pb-2 font-semibold">Source</th>
-                    <th className="pb-2 font-semibold text-center">Severity</th>
-                    <th className="pb-2 font-semibold text-right">Detected</th>
+                  <tr className="border-b border-[#1E2E4E] bg-[#0A1120] text-slate-400 font-mono text-[11px] uppercase tracking-wider">
+                    <th className="py-2 px-3 font-semibold">Signal Headline</th>
+                    <th className="py-2 px-3 font-semibold">Type</th>
+                    <th className="py-2 px-3 font-semibold">Source</th>
+                    <th className="py-2 px-3 font-semibold text-center">Severity</th>
+                    <th className="py-2 px-3 font-semibold text-right">Detected</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#182338]">
+                <tbody className="divide-y divide-[#16233B]">
                   {topEvents.map((evt) => (
-                    <tr key={evt.id} className="hover:bg-[#152035]/40 transition-colors">
-                      <td className="py-2.5 pr-3 font-medium text-slate-200">
+                    <tr key={evt.id} className="hover:bg-[#121E36] transition-colors">
+                      <td className="py-2 px-3 font-medium text-slate-200">
                         <Link
                           to={`/risk-events?search=${encodeURIComponent(evt.headline.slice(0, 30))}`}
                           className="hover:text-[#3DD6C4] inline-flex items-center gap-1 text-xs"
@@ -406,11 +407,11 @@ export const SupplierDetailPage: React.FC = () => {
                           <ExternalLink className="w-3 h-3 text-slate-500 shrink-0" />
                         </Link>
                       </td>
-                      <td className="py-2.5 font-mono text-slate-300 capitalize">
+                      <td className="py-2 px-3 font-mono text-slate-300 capitalize text-[11px]">
                         {evt.event_type.replace(/_/g, ' ')}
                       </td>
-                      <td className="py-2.5 font-mono text-slate-400">{evt.source}</td>
-                      <td className="py-2.5 text-center font-mono">
+                      <td className="py-2 px-3 font-mono text-slate-400 text-[11px]">{evt.source}</td>
+                      <td className="py-2 px-3 text-center font-mono">
                         {typeof evt.severity === 'number' ? (
                           <span
                             className="font-bold"
@@ -422,7 +423,7 @@ export const SupplierDetailPage: React.FC = () => {
                           '—'
                         )}
                       </td>
-                      <td className="py-2.5 text-right font-mono text-slate-400">
+                      <td className="py-2 px-3 text-right font-mono text-slate-400 text-[11px]">
                         {evt.detected_at
                           ? new Date(evt.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
                           : '—'}
@@ -439,7 +440,7 @@ export const SupplierDetailPage: React.FC = () => {
       {/* Grid: Historical Trajectory & Product Line Dependencies */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Risk Score History Chart */}
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+        <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -449,7 +450,7 @@ export const SupplierDetailPage: React.FC = () => {
               <p className="text-xs text-slate-400">Audit trail of fused risk scores across pipeline runs</p>
             </div>
             {historyData.length > 0 && (
-              <span className="text-xs font-mono text-slate-400 bg-[#0E1626] px-2 py-0.5 rounded border border-[#1E2C48]">
+              <span className="text-xs font-mono text-slate-400 bg-[#080E1C] px-2 py-0.5 rounded border border-[#1E2E4E]">
                 {historyData.length} snapshot{historyData.length > 1 ? 's' : ''}
               </span>
             )}
@@ -459,25 +460,26 @@ export const SupplierDetailPage: React.FC = () => {
             {historyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={historyData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E2C48" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={CHART_THEME.grid} vertical={false} />
                   <XAxis
                     dataKey="formattedTime"
-                    stroke="#64748B"
+                    stroke={CHART_THEME.axis}
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                   />
                   <YAxis
                     domain={[0, 100]}
-                    stroke="#64748B"
+                    stroke={CHART_THEME.axis}
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#0E1626',
-                      borderColor: '#1E2C48',
-                      borderRadius: '8px',
-                      fontSize: '12px',
+                      backgroundColor: CHART_THEME.tooltip.backgroundColor,
+                      borderColor: CHART_THEME.tooltip.borderColor,
+                      borderRadius: CHART_THEME.tooltip.borderRadius,
+                      fontSize: CHART_THEME.tooltip.fontSize,
+                      color: CHART_THEME.tooltip.color,
                     }}
                     formatter={(value: any) => [`${Number(value).toFixed(1)} / 100`, 'Risk Score']}
                   />
@@ -501,7 +503,7 @@ export const SupplierDetailPage: React.FC = () => {
         </div>
 
         {/* Product Line Dependencies */}
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+        <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5">
           <div className="flex items-center justify-between mb-1">
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
               <Link2 className="w-4 h-4 text-indigo-400" />
@@ -523,7 +525,7 @@ export const SupplierDetailPage: React.FC = () => {
               {supplier.dependencies.map((dep) => (
                 <div
                   key={dep.id}
-                  className="flex items-center justify-between p-3 rounded-lg bg-[#0E1626] border border-[#1E2C48]"
+                  className="flex items-center justify-between p-3 rounded-md bg-[#080E1C] border border-[#1E2E4E]"
                 >
                   <div>
                     <div className="font-medium text-slate-200 text-xs">
@@ -533,7 +535,7 @@ export const SupplierDetailPage: React.FC = () => {
                       Downstream manufacturing line
                     </div>
                   </div>
-                  <div className="text-xs font-mono text-slate-300 bg-[#141E33] px-2 py-1 rounded border border-[#233352]">
+                  <div className="text-xs font-mono text-slate-300 bg-[#121F38] px-2 py-1 rounded border border-[#1E2E4E]">
                     Weight: <strong className="text-indigo-400">{dep.dependency_weight.toFixed(2)}</strong>
                   </div>
                 </div>
@@ -546,7 +548,7 @@ export const SupplierDetailPage: React.FC = () => {
       </div>
 
       {/* Corridor External Risk Events Feed */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-5">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-sm font-semibold text-white flex items-center gap-2">
@@ -570,11 +572,11 @@ export const SupplierDetailPage: React.FC = () => {
             {supplier.related_risk_events.slice(0, 6).map((evt) => (
               <div
                 key={evt.id}
-                className="p-3 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                className="p-3 rounded-md bg-[#080E1C] border border-[#1E2E4E] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
                 <div className="space-y-1 flex-1">
                   <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
-                    <span className="text-slate-300 uppercase bg-[#16253B] px-1.5 py-0.5 rounded border border-[#233959]">
+                    <span className="text-slate-300 uppercase bg-[#121F38] px-1.5 py-0.5 rounded border border-[#1E2E4E]">
                       {evt.event_type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-slate-400">

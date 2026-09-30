@@ -534,10 +534,10 @@ export const NetworkPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowLegend(!showLegend)}
-              className={`px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
+              className={`px-3 py-1.5 rounded-md border text-xs font-mono transition-colors ${
                 showLegend
-                  ? 'bg-[#1E2C48] text-[#3DD6C4] border-[#3DD6C4]/40'
-                  : 'bg-[#141E33] text-slate-400 border-[#233352] hover:text-white'
+                  ? 'bg-[#14233D] text-[#3DD6C4] border-[#3DD6C4]/40'
+                  : 'bg-[#0D1628] text-slate-400 border-[#1E2E4E] hover:text-white'
               }`}
             >
               <HelpCircle className="w-3.5 h-3.5 inline mr-1" />
@@ -546,9 +546,9 @@ export const NetworkPage: React.FC = () => {
             <button
               type="button"
               onClick={refetch}
-              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1E2C48] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-md bg-[#0D1628] hover:bg-[#14233D] text-slate-300 hover:text-white border border-[#1E2E4E] text-xs font-mono transition-colors"
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-3.5 h-3.5 text-slate-400" />
               <span>Refresh Topology</span>
             </button>
           </div>
@@ -560,33 +560,33 @@ export const NetworkPage: React.FC = () => {
         <StatCard
           label="Total Graph Nodes"
           value={network?.nodes.length ?? 0}
-          icon={<NetworkIcon className="w-5 h-5 text-[#3DD6C4]" />}
+          icon={<NetworkIcon className="w-4 h-4 text-[#3DD6C4]" />}
           subtext="24 component suppliers + 4 product lines"
         />
         <StatCard
-          label="At-Risk Suppliers (>=70)"
+          label="At-Risk Suppliers (≥70)"
           value={nodeStats.highRisk}
           variant={nodeStats.highRisk > 0 ? 'critical' : 'success'}
-          icon={<ShieldAlert className="w-5 h-5" />}
+          icon={<ShieldAlert className="w-4 h-4" />}
           subtext="Vulnerable nodes requiring mitigation"
         />
         <StatCard
           label="Directed Dependencies"
           value={network?.edges.length ?? 0}
-          icon={<Link2 className="w-5 h-5 text-indigo-400" />}
+          icon={<Link2 className="w-4 h-4 text-indigo-400" />}
           subtext="Critical product bill-of-materials paths"
         />
         <StatCard
           label="Visible Subgraph"
           value={`${filteredData.nodes.length} Nodes`}
-          icon={<Filter className="w-5 h-5 text-slate-400" />}
+          icon={<Filter className="w-4 h-4 text-slate-400" />}
           subtext={`${filteredData.links.length} active edges after filter`}
         />
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2.5">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-3.5 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-mono uppercase tracking-wider text-slate-400 flex items-center gap-1.5 mr-1">
             <Filter className="w-3.5 h-3.5" />
             Filters:
@@ -597,10 +597,10 @@ export const NetworkPage: React.FC = () => {
             aria-label="Filter by Risk Level"
             value={riskFilter}
             onChange={(e) => setRiskFilter(e.target.value)}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs font-mono text-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
           >
             <option value="all">All Risk Levels</option>
-            <option value="CRITICAL">Critical (&gt;=80)</option>
+            <option value="CRITICAL">Critical (≥80)</option>
             <option value="HIGH">High (70-79)</option>
             <option value="MEDIUM">Medium (40-69)</option>
             <option value="LOW">Low (&lt;40)</option>
@@ -611,7 +611,7 @@ export const NetworkPage: React.FC = () => {
             aria-label="Filter by Operating Corridor"
             value={regionFilter}
             onChange={(e) => setRegionFilter(e.target.value)}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs font-mono text-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
           >
             <option value="all">All Corridors</option>
             {availableRegions.map((reg) => (
@@ -626,7 +626,7 @@ export const NetworkPage: React.FC = () => {
             aria-label="Filter by Criticality Tier"
             value={tierFilter}
             onChange={(e) => setTierFilter(e.target.value)}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs font-mono text-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
           >
             <option value="all">All Criticality Tiers</option>
             <option value="1">Tier 1 (Critical Single-Source)</option>
@@ -638,10 +638,10 @@ export const NetworkPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setShowHubs(!showHubs)}
-            className={`px-3 py-1.5 rounded-lg border text-xs font-mono transition-colors ${
+            className={`px-3 py-1.5 rounded-md border text-xs font-mono transition-colors ${
               showHubs
-                ? 'bg-[#1A253E] text-indigo-300 border-indigo-700/60'
-                : 'bg-[#0B1120] text-slate-400 border-[#1E2C48]'
+                ? 'bg-[#15233E] text-indigo-300 border-indigo-700/60'
+                : 'bg-[#080E1C] text-slate-400 border-[#1E2E4E]'
             }`}
           >
             {showHubs ? 'Product Hubs: Shown' : 'Product Hubs: Hidden'}
@@ -680,7 +680,7 @@ export const NetworkPage: React.FC = () => {
                 fgRef.current.zoom(2.0, 500)
               }
             }}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs font-mono text-slate-200 px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 max-w-[220px]"
+            className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50 max-w-[220px]"
           >
             <option value="">Choose Node...</option>
             <optgroup label="Product Lines">
@@ -706,9 +706,9 @@ export const NetworkPage: React.FC = () => {
       </div>
 
       {/* Main Interactive Graph Canvas & Side Panel Container */}
-      <div className="relative bg-[#0B1120] border border-[#1E2C48] rounded-xl overflow-hidden shadow-2xl">
+      <div className="relative bg-[#080E1C] border border-[#1E2E4E] rounded-lg overflow-hidden shadow-xl">
         {/* Force Directed Graph Canvas */}
-        <div ref={containerRef} className="w-full h-[620px] relative bg-[#090E1A]">
+        <div ref={containerRef} className="w-full h-[620px] relative bg-[#080E1C]">
           <ForceGraph2D
             ref={fgRef}
             width={dimensions.width}
@@ -758,13 +758,13 @@ export const NetworkPage: React.FC = () => {
           />
 
           {/* Floating Graph Camera Controls Toolbar (Top Right) */}
-          <div className="absolute top-4 right-4 z-10 flex flex-col space-y-1.5 bg-[#0E1626]/90 border border-[#1E2C48] backdrop-blur rounded-lg p-1.5 shadow-lg">
+          <div className="absolute top-4 right-4 z-10 flex flex-col space-y-1.5 bg-[#0D1628]/95 border border-[#1E2E4E] backdrop-blur rounded-md p-1 shadow-lg">
             <button
               type="button"
               onClick={handleZoomIn}
               title="Zoom In"
               aria-label="Zoom In"
-              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#1A253E] rounded transition-colors"
+              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#14233D] rounded transition-colors"
             >
               <ZoomIn className="w-4 h-4" />
             </button>
@@ -773,7 +773,7 @@ export const NetworkPage: React.FC = () => {
               onClick={handleZoomOut}
               title="Zoom Out"
               aria-label="Zoom Out"
-              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#1A253E] rounded transition-colors"
+              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#14233D] rounded transition-colors"
             >
               <ZoomOut className="w-4 h-4" />
             </button>
@@ -782,7 +782,7 @@ export const NetworkPage: React.FC = () => {
               onClick={handleZoomToFit}
               title="Fit Entire Graph"
               aria-label="Fit Entire Graph"
-              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#1A253E] rounded transition-colors"
+              className="p-1.5 text-slate-300 hover:text-white hover:bg-[#14233D] rounded transition-colors"
             >
               <Maximize2 className="w-4 h-4" />
             </button>
@@ -792,7 +792,7 @@ export const NetworkPage: React.FC = () => {
                 onClick={handleCenterSelected}
                 title="Center Selected Node"
                 aria-label="Center Selected Node"
-                className="p-1.5 text-[#3DD6C4] hover:bg-[#1A253E] rounded transition-colors"
+                className="p-1.5 text-[#3DD6C4] hover:bg-[#14233D] rounded transition-colors"
               >
                 <Target className="w-4 h-4" />
               </button>
@@ -801,8 +801,8 @@ export const NetworkPage: React.FC = () => {
 
           {/* Floating Compact Legend (Bottom Left) */}
           {showLegend && (
-            <div className="absolute bottom-4 left-4 z-10 bg-[#0E1626]/95 border border-[#1E2C48] backdrop-blur rounded-lg p-3 text-[11px] font-mono shadow-xl max-w-[280px]">
-              <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#1E2C48]">
+            <div className="absolute bottom-4 left-4 z-10 bg-[#0D1628]/95 border border-[#1E2E4E] backdrop-blur rounded-md p-3 text-[11px] font-mono shadow-xl max-w-[280px]">
+              <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-[#1E2E4E]">
                 <span className="font-semibold text-slate-200 uppercase tracking-wider text-[10px]">
                   Visual Encoding
                 </span>
@@ -823,7 +823,7 @@ export const NetworkPage: React.FC = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#BE123C]" />
-                  <span>Critical Risk (&gt;=80) • Pulsing</span>
+                  <span>Critical Risk (≥80) • Pulsing</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#DC2626]" />
@@ -837,7 +837,7 @@ export const NetworkPage: React.FC = () => {
                   <span className="w-2.5 h-2.5 rounded-full bg-[#059669]" />
                   <span>Low Risk (&lt;40)</span>
                 </div>
-                <div className="flex items-center space-x-2 pt-1 border-t border-[#1E2C48]/60 text-[10px] text-slate-400">
+                <div className="flex items-center space-x-2 pt-1 border-t border-[#1E2E4E]/60 text-[10px] text-slate-400">
                   <span className="w-4 h-[2px] bg-slate-400 inline-block" />
                   <span>Edge Width = Dependency Weight</span>
                 </div>
@@ -847,26 +847,26 @@ export const NetworkPage: React.FC = () => {
 
           {/* Contextual Selected Node Detail Slide-Over Card (Bottom Right / Side) */}
           {selectedNode && selectedNodeDetails && (
-            <div className="absolute top-4 left-4 sm:left-auto sm:right-16 z-20 w-auto max-w-[340px] sm:max-w-[360px] bg-[#0E1626]/95 border border-[#2B3E63] backdrop-blur rounded-xl p-4 shadow-2xl transition-all">
+            <div className="absolute top-4 left-4 sm:left-auto sm:right-16 z-20 w-auto max-w-[340px] sm:max-w-[360px] bg-[#0D1628]/95 border border-[#2B426E] backdrop-blur rounded-lg p-4 shadow-2xl transition-all">
               {/* Header */}
-              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#1E2C48]">
-                <div className="space-y-1">
+              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#1E2E4E]">
+                <div className="space-y-0.5">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
                     {selectedNode.type === 'product' ? 'Product Line Assembly Hub' : 'Component Supplier Node'}
                   </span>
-                  <h4 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                  <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
                     {selectedNode.type === 'product' ? (
                       <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
                     ) : (
                       <Building2 className="w-4 h-4 text-[#3DD6C4] shrink-0" />
                     )}
                     <span className="line-clamp-1">{selectedNode.name}</span>
-                  </h4>
+                  </h3>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedNode(null)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#1A253E]"
+                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D]"
                   aria-label="Deselect node"
                 >
                   <X className="w-4 h-4" />
@@ -889,7 +889,7 @@ export const NetworkPage: React.FC = () => {
                     </div>
 
                     {/* Connected Suppliers preview */}
-                    <div className="pt-2 border-t border-[#1E2C48]">
+                    <div className="pt-2 border-t border-[#1E2E4E]">
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1.5">
                         Connected Component Feeders:
                       </span>
@@ -904,7 +904,7 @@ export const NetworkPage: React.FC = () => {
                                 fgRef.current?.centerAt(node.x, node.y, 400)
                               }
                             }}
-                            className="p-1.5 rounded bg-[#131D31] hover:bg-[#1A2744] cursor-pointer flex items-center justify-between text-[11px]"
+                            className="p-1.5 rounded bg-[#080E1C] hover:bg-[#14233D] cursor-pointer flex items-center justify-between text-[11px] border border-[#16233B]"
                           >
                             <span className="text-slate-200 truncate max-w-[190px]">{sup.name}</span>
                             <RiskBadge score={sup.current_risk_score} size="sm" />
@@ -946,7 +946,7 @@ export const NetworkPage: React.FC = () => {
                     )}
 
                     {/* Downstream product lines */}
-                    <div className="pt-2 border-t border-[#1E2C48]">
+                    <div className="pt-2 border-t border-[#1E2E4E]">
                       <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
                         Downstream Product Dependents:
                       </span>
@@ -954,7 +954,7 @@ export const NetworkPage: React.FC = () => {
                         {selectedNodeDetails.productLines?.map((pl) => (
                           <div
                             key={pl.id}
-                            className="flex items-center justify-between text-[11px] p-1.5 rounded bg-[#131D31]"
+                            className="flex items-center justify-between text-[11px] p-1.5 rounded bg-[#080E1C] border border-[#16233B]"
                           >
                             <span className="text-indigo-300">{pl.company_product}</span>
                             <span className="text-slate-400">
@@ -966,10 +966,10 @@ export const NetworkPage: React.FC = () => {
                     </div>
 
                     {/* Action button to open full supplier telemetry */}
-                    <div className="pt-3 border-t border-[#1E2C48]">
+                    <div className="pt-3 border-t border-[#1E2E4E]">
                       <Link
                         to={`/suppliers/${selectedNode.id}`}
-                        className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/30 hover:border-[#3DD6C4] text-xs font-semibold transition-colors"
+                        className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-md bg-[#142540] hover:bg-[#1C3357] text-[#3DD6C4] border border-[#3DD6C4]/30 hover:border-[#3DD6C4] text-xs font-semibold transition-colors"
                       >
                         <span>Open Deep-Dive Telemetry</span>
                         <ArrowRight className="w-3.5 h-3.5" />

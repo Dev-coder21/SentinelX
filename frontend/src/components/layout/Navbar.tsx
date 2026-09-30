@@ -59,31 +59,28 @@ export const Navbar: React.FC = () => {
   }, [])
 
   return (
-    <header className="border-b border-[#1E2C48] bg-[#0E1626]/90 backdrop-blur sticky top-0 z-50">
+    <header className="border-b border-[#1E2E4E] bg-[#0A1120]/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14">
           {/* Logo / Brand */}
           <div className="flex items-center space-x-3">
-            <NavLink to="/dashboard" className="flex items-center space-x-3 group">
-              <div className="h-9 w-9 rounded-lg bg-gradient-to-br from-[#3DD6C4] to-[#6366F1] flex items-center justify-center shadow-md shadow-[#3DD6C4]/10 transition-transform group-hover:scale-105">
-                <ShieldCheck className="h-5 w-5 text-[#0B1120] stroke-[2.5]" />
+            <NavLink to="/dashboard" className="flex items-center space-x-2.5 group">
+              <div className="h-8 w-8 rounded-md bg-[#0F1C33] border border-[#233B62] flex items-center justify-center transition-colors group-hover:border-[#3DD6C4]/60">
+                <ShieldCheck className="h-4.5 w-4.5 text-[#3DD6C4] stroke-[2]" />
               </div>
-              <div>
-                <span className="text-lg font-bold tracking-tight text-white flex items-center gap-1.5">
+              <div className="flex items-baseline space-x-1.5">
+                <span className="text-base font-bold tracking-tight text-white font-sans">
                   SentinelX
-                  <span className="text-[9px] font-mono uppercase bg-[#1A253E] text-[#3DD6C4] px-1.5 py-0.5 rounded border border-[#3DD6C4]/30">
-                    Ops
-                  </span>
                 </span>
-                <span className="hidden sm:block text-[11px] text-slate-400 font-mono tracking-tight -mt-0.5">
-                  Supply Chain Intelligence
+                <span className="text-[10px] font-mono uppercase bg-[#121F38] text-slate-400 px-1.5 py-0.5 rounded border border-[#1E2E4E]">
+                  Ops
                 </span>
               </div>
             </NavLink>
           </div>
 
           {/* Desktop Nav Items */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2" aria-label="Main Navigation">
+          <nav className="hidden md:flex items-center space-x-1" aria-label="Main Navigation">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon
               const isActive =
@@ -95,13 +92,13 @@ export const Navbar: React.FC = () => {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-xs lg:text-sm font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
                     isActive
-                      ? 'bg-[#1E2C48] text-[#3DD6C4] font-semibold border border-[#3DD6C4]/30'
-                      : 'text-slate-300 hover:text-white hover:bg-[#162036]'
+                      ? 'bg-[#14233D] text-[#3DD6C4] border border-[#233B62] shadow-sm'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#101A2F]'
                   }`}
                 >
-                  <Icon className="w-4 h-4" />
+                  <Icon className="w-3.5 h-3.5" />
                   <span>{item.label}</span>
                 </NavLink>
               )
@@ -111,10 +108,10 @@ export const Navbar: React.FC = () => {
           {/* Right Status Indicator */}
           <div className="hidden sm:flex items-center space-x-3">
             <div
-              className="flex items-center space-x-2 text-[11px] font-mono px-2.5 py-1.5 rounded-md bg-[#131D31] border border-[#1E2C48]"
+              className="flex items-center space-x-2 text-[11px] font-mono px-2.5 py-1 rounded bg-[#0D1628] border border-[#1E2E4E]"
               title="Backend connectivity status"
             >
-              <span className="text-slate-400">API:</span>
+              <span className="text-slate-500">API:</span>
               {healthLoading ? (
                 <span className="flex items-center text-amber-400">
                   <RefreshCw className="h-3 w-3 animate-spin mr-1" /> Connecting
@@ -136,11 +133,11 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 rounded-md text-slate-400 hover:text-white hover:bg-[#1E2C48] focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]"
+              className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D] focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]"
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
@@ -148,7 +145,7 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#1E2C48] bg-[#0E1626] px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-b border-[#1E2E4E] bg-[#0D1628] px-4 pt-2 pb-4 space-y-1">
           {NAV_ITEMS.map((item) => {
             const Icon = item.icon
             const isActive =
@@ -161,18 +158,18 @@ export const Navbar: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
+                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-xs font-medium ${
                   isActive
-                    ? 'bg-[#1E2C48] text-[#3DD6C4] border border-[#3DD6C4]/30'
-                    : 'text-slate-300 hover:text-white hover:bg-[#162036]'
+                    ? 'bg-[#14233D] text-[#3DD6C4] border border-[#233B62]'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#101A2F]'
                 }`}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="w-4 h-4" />
                 <span>{item.label}</span>
               </NavLink>
             )
           })}
-          <div className="pt-2 border-t border-[#1E2C48] flex items-center justify-between text-xs font-mono text-slate-400 px-3">
+          <div className="pt-2 border-t border-[#1E2E4E] flex items-center justify-between text-xs font-mono text-slate-400 px-3">
             <span>Backend Status:</span>
             {healthLoading ? (
               <span className="text-amber-400">Connecting...</span>

@@ -136,7 +136,7 @@ export const SuppliersPage: React.FC = () => {
         subtitle="Tier-1 and Tier-2 component suppliers with active vulnerability telemetry."
         badge={
           suppliers ? (
-            <span className="text-xs font-mono bg-[#162036] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2C48]">
+            <span className="text-xs font-mono bg-[#121F38] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2E4E]">
               {filtered.length} of {suppliers.length} Nodes
             </span>
           ) : undefined
@@ -144,7 +144,7 @@ export const SuppliersPage: React.FC = () => {
       />
 
       {/* Search and Filters Bar */}
-      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4 space-y-3">
+      <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg p-3.5 space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           {/* Search input */}
           <div className="relative flex-1">
@@ -154,13 +154,13 @@ export const SuppliersPage: React.FC = () => {
               placeholder="Search by supplier name, category, country, or region..."
               value={search}
               onChange={(e) => updateFilter({ search: e.target.value })}
-              className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
+              className="w-full pl-9 pr-8 py-1.5 bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
             />
             {search && (
               <button
                 type="button"
                 onClick={() => updateFilter({ search: '' })}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
                 aria-label="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -180,7 +180,7 @@ export const SuppliersPage: React.FC = () => {
               aria-label="Filter by geographic region"
               value={selectedRegion}
               onChange={(e) => updateFilter({ region: e.target.value })}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
             >
               <option value="all">All Corridors</option>
               {regions.map((reg) => (
@@ -195,7 +195,7 @@ export const SuppliersPage: React.FC = () => {
               aria-label="Filter by risk severity bracket"
               value={selectedRisk}
               onChange={(e) => updateFilter({ risk: e.target.value })}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 font-mono"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
             >
               <option value="all">All Risk Levels</option>
               <option value="CRITICAL">Critical (≥ 80.0)</option>
@@ -209,7 +209,7 @@ export const SuppliersPage: React.FC = () => {
               aria-label="Filter by criticality tier"
               value={selectedTier}
               onChange={(e) => updateFilter({ tier: e.target.value })}
-              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+              className="bg-[#080E1C] border border-[#1E2E4E] rounded-md text-xs font-mono text-slate-200 px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]/50"
             >
               <option value="all">All Tiers</option>
               <option value="1">Tier 1 (Critical)</option>
@@ -222,7 +222,7 @@ export const SuppliersPage: React.FC = () => {
               <button
                 type="button"
                 onClick={clearAllFilters}
-                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-2 rounded-lg bg-[#0E1626] border border-[#1E2C48] transition-colors"
+                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-1.5 rounded-md bg-[#080E1C] border border-[#1E2E4E] transition-colors"
               >
                 Reset Filters
               </button>
@@ -241,27 +241,27 @@ export const SuppliersPage: React.FC = () => {
           onAction={clearAllFilters}
         />
       ) : (
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl overflow-hidden shadow-sm">
+        <div className="bg-[#0D1628] border border-[#1E2E4E] rounded-lg overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm border-collapse">
               <thead>
-                <tr className="border-b border-[#1E2C48] bg-[#0E1626] text-slate-400 text-xs font-mono uppercase tracking-wider">
-                  <th className="py-3 px-4 font-semibold">Supplier Name</th>
-                  <th className="py-3 px-4 font-semibold">Category</th>
-                  <th className="py-3 px-4 font-semibold">Corridor & Country</th>
-                  <th className="py-3 px-4 font-semibold text-center">Criticality</th>
-                  <th className="py-3 px-4 font-semibold text-right">Annual Spend</th>
-                  <th className="py-3 px-4 font-semibold text-center">Risk Level</th>
-                  <th className="py-3 px-4 font-semibold text-right">Actions</th>
+                <tr className="border-b border-[#1E2E4E] bg-[#0A1120] text-slate-400 text-[11px] font-mono uppercase tracking-wider">
+                  <th className="py-2.5 px-3.5 font-semibold">Supplier Name</th>
+                  <th className="py-2.5 px-3.5 font-semibold">Category</th>
+                  <th className="py-2.5 px-3.5 font-semibold">Corridor & Country</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-center">Criticality</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-right">Annual Spend</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-center">Risk Level</th>
+                  <th className="py-2.5 px-3.5 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#182338]">
+              <tbody className="divide-y divide-[#16233B]">
                 {filtered.map((s: Supplier) => (
                   <tr
                     key={s.id}
-                    className="hover:bg-[#152035]/60 transition-colors group"
+                    className="hover:bg-[#121E36] transition-colors group"
                   >
-                    <td className="py-3.5 px-4 font-medium text-slate-100">
+                    <td className="py-3 px-3.5 font-medium text-slate-100">
                       <Link
                         to={`/suppliers/${s.id}`}
                         className="hover:text-[#3DD6C4] transition-colors flex items-center gap-2"
@@ -271,25 +271,25 @@ export const SuppliersPage: React.FC = () => {
                       </Link>
                     </td>
 
-                    <td className="py-3.5 px-4 text-xs text-slate-300 font-mono">
-                      <span className="bg-[#152036] px-2 py-0.5 rounded border border-[#1E2C48]">
+                    <td className="py-3 px-3.5 text-xs text-slate-300 font-mono">
+                      <span className="bg-[#121F38] text-slate-300 px-2 py-0.5 rounded border border-[#1E2E4E] text-[11px]">
                         {s.category}
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-xs">
+                    <td className="py-3 px-3.5 text-xs">
                       <button
                         type="button"
                         onClick={() => updateFilter({ region: s.region })}
-                        className="text-slate-300 hover:text-[#3DD6C4] underline underline-offset-2 transition-colors"
+                        className="text-slate-300 hover:text-[#3DD6C4] underline underline-offset-2 transition-colors font-mono"
                         title={`Filter fleet to ${s.region}`}
                       >
                         {s.region}
                       </button>
-                      <span className="text-slate-400 ml-1">({s.country})</span>
+                      <span className="text-slate-500 ml-1">({s.country})</span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-3.5 text-center">
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[11px] font-mono font-bold ${
                           s.criticality_tier === 1
@@ -303,11 +303,11 @@ export const SuppliersPage: React.FC = () => {
                       </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono text-xs text-slate-300">
+                    <td className="py-3 px-3.5 text-right font-mono text-xs text-slate-300">
                       ${s.annual_spend.toLocaleString()}
                     </td>
 
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3 px-3.5 text-center">
                       <RiskBadge
                         score={s.current_risk_score}
                         level={s.risk_level}
@@ -315,11 +315,11 @@ export const SuppliersPage: React.FC = () => {
                       />
                     </td>
 
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="inline-flex items-center space-x-2">
+                    <td className="py-3 px-3.5 text-right">
+                      <div className="inline-flex items-center space-x-1.5">
                         <Link
                           to={`/network?select=${s.id}`}
-                          className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-[#0E1626] hover:bg-[#1E2C48] border border-[#1E2C48] transition-colors"
+                          className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-white px-2 py-1 rounded-md bg-[#121D34] hover:bg-[#182644] border border-[#1E2E4E] transition-colors"
                           title="Inspect node in dependency network"
                         >
                           <Share2 className="w-3 h-3 text-indigo-400" />
@@ -327,7 +327,7 @@ export const SuppliersPage: React.FC = () => {
                         </Link>
                         <Link
                           to={`/suppliers/${s.id}`}
-                          className="inline-flex items-center space-x-1 text-xs text-[#3DD6C4] hover:text-[#5eead4] font-medium px-2 py-1 rounded bg-[#16253B] hover:bg-[#1F3352] border border-[#2B436E] transition-colors"
+                          className="inline-flex items-center space-x-1 text-xs text-[#3DD6C4] hover:text-[#5eead4] font-medium px-2.5 py-1 rounded-md bg-[#142540] hover:bg-[#1C3357] border border-[#3DD6C4]/30 transition-colors"
                         >
                           <span>Inspect</span>
                           <ChevronRight className="w-3.5 h-3.5" />

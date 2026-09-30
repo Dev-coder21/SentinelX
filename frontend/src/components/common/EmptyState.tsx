@@ -18,22 +18,22 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
   actionLabel,
   onAction,
   className = '',
-  minHeight = 'min-h-[220px]',
+  minHeight = 'min-h-[200px]',
 }) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center p-8 text-center bg-[#111A2E]/40 border border-[#1E2C48] rounded-xl ${minHeight} ${className}`}
+      className={`flex flex-col items-center justify-center p-8 text-center bg-[#0D1628]/80 border border-[#1E2E4E] rounded-lg ${minHeight} ${className}`}
     >
-      <div className="w-12 h-12 rounded-full bg-[#1A253E] flex items-center justify-center mb-3 text-slate-400">
-        {icon || <Inbox className="w-6 h-6" />}
+      <div className="w-10 h-10 rounded-md bg-[#121F38] border border-[#1E2E4E] flex items-center justify-center mb-3 text-slate-400">
+        {icon || <Inbox className="w-5 h-5" />}
       </div>
-      <h3 className="text-base font-medium text-slate-200 mb-1">{title}</h3>
-      {description && <p className="text-sm text-slate-400 max-w-sm mb-5">{description}</p>}
+      <h3 className="text-sm font-semibold text-slate-200 mb-1">{title}</h3>
+      {description && <p className="text-xs text-slate-400 max-w-sm mb-4 leading-relaxed">{description}</p>}
       {actionLabel && onAction && (
         <button
           type="button"
           onClick={onAction}
-          className="inline-flex items-center px-4 py-2 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-slate-200 border border-[#2B3E63] text-sm font-medium transition-colors"
+          className="inline-flex items-center px-3 py-1.5 rounded-md bg-[#14233D] hover:bg-[#1C3256] text-[#3DD6C4] border border-[#233B62] text-xs font-medium transition-colors"
         >
           {actionLabel}
         </button>

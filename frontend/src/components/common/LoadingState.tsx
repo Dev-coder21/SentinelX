@@ -8,9 +8,9 @@ interface LoadingStateProps {
 }
 
 export const LoadingState: React.FC<LoadingStateProps> = ({
-  message = 'Loading operational data...',
+  message = 'Loading operational telemetry...',
   className = '',
-  minHeight = 'min-h-[240px]',
+  minHeight = 'min-h-[200px]',
 }) => {
   return (
     <div
@@ -18,8 +18,8 @@ export const LoadingState: React.FC<LoadingStateProps> = ({
       aria-live="polite"
       className={`flex flex-col items-center justify-center p-8 text-slate-400 ${minHeight} ${className}`}
     >
-      <Loader2 className="h-8 w-8 animate-spin text-[#3DD6C4] mb-3" />
-      <p className="text-sm font-medium tracking-wide text-slate-300">{message}</p>
+      <Loader2 className="h-6 w-6 animate-spin text-[#3DD6C4] mb-2.5 stroke-[2]" />
+      <p className="text-xs font-mono tracking-wide text-slate-300">{message}</p>
       <span className="sr-only">Loading</span>
     </div>
   )
