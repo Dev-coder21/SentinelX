@@ -19,7 +19,7 @@ The objective of this evaluation is behavioral and methodological validation:
 
 ## 2. Methodology & Production Formula Reuse
 
-The historical evaluation workflow reuses the exact, unmodified production risk methodology defined in [`app/nlp/risk_fusion.py`](file:///Users/devtrivedi/.gemini/antigravity-ide/scratch/sentinelx/backend/app/nlp/risk_fusion.py). No formulas, weights, multipliers, or decay constants were altered for this evaluation.
+The historical evaluation workflow reuses the exact, unmodified production risk methodology defined in [`backend/app/nlp/risk_fusion.py`](../backend/app/nlp/risk_fusion.py). No formulas, weights, multipliers, or decay constants were altered for this evaluation.
 
 ### Core Mathematical Formulations Reused
 
@@ -51,7 +51,7 @@ The historical evaluation workflow reuses the exact, unmodified production risk 
 
 ## 3. Documented Historical Cases & Provenance
 
-Four documented, major historical supply chain disruption events were encoded as explicit, immutable evaluation fixtures in [`backend/evaluation/cases/`](file:///Users/devtrivedi/.gemini/antigravity-ide/scratch/sentinelx/backend/evaluation/cases/).
+Four documented, major historical supply chain disruption events were encoded as explicit, immutable evaluation fixtures in [`backend/evaluation/cases/`](../backend/evaluation/cases/).
 
 | Case ID | Name | Primary Type | Region | Timeframe | Documented Sources |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -159,5 +159,5 @@ cd backend
 ```
 
 ### Generated Artifacts
-- **Detailed Machine-Readable JSON**: [`backend/evaluation/results/historical_validation_results.json`](file:///Users/devtrivedi/.gemini/antigravity-ide/scratch/sentinelx/backend/evaluation/results/historical_validation_results.json)
-- **Summary Machine-Readable CSV**: [`backend/evaluation/results/historical_validation_summary.csv`](file:///Users/devtrivedi/.gemini/antigravity-ide/scratch/sentinelx/backend/evaluation/results/historical_validation_summary.csv)
+- **Detailed Machine-Readable JSON**: [`backend/evaluation/results/historical_validation_results.json`](../backend/evaluation/results/historical_validation_results.json)
+- **Summary Machine-Readable CSV**: [`backend/evaluation/results/historical_validation_summary.csv`](../backend/evaluation/results/historical_validation_summary.csv)
