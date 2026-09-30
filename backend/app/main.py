@@ -3,6 +3,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.health import router as health_router
+from app.api.suppliers import router as suppliers_router
+from app.api.network import router as network_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -22,9 +24,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include Routers
+# Root-level endpoints (/health, /suppliers, /network)
 app.include_router(health_router)
+app.include_router(suppliers_router)
+app.include_router(network_router)
+
+# Versioned API endpoints (/api/v1/health, /api/v1/suppliers, /api/v1/network)
 app.include_router(health_router, prefix=settings.API_V1_STR)
+app.include_router(suppliers_router, prefix=settings.API_V1_STR)
+app.include_router(network_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Root"])
@@ -34,6 +42,8 @@ def root():
         "version": settings.VERSION,
         "docs": "/docs",
         "health": "/health",
+        "suppliers": "/suppliers",
+        "network": "/network",
     }
 
 
