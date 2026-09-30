@@ -61,6 +61,23 @@ export const Navbar: React.FC = () => {
     }
   }, [])
 
+  useEffect(() => {
+    const handlePopstate = () => setMobileMenuOpen(false)
+    window.addEventListener('popstate', handlePopstate)
+    return () => window.removeEventListener('popstate', handlePopstate)
+  }, [])
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setMobileMenuOpen(false)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [mobileMenuOpen])
+
   return (
     <header className="border-b border-[#1E2E4E] bg-[#0A1120]/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -139,6 +156,7 @@ export const Navbar: React.FC = () => {
               className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D] focus:outline-none focus:ring-1 focus:ring-[#3DD6C4] transition-colors active:scale-95"
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-nav-menu"
             >
               {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -146,10 +164,29 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu Backdrop */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
+            key="mobile-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.15 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 top-14 bg-black/60 z-40 md:hidden backdrop-blur-xs"
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Menu Drawer */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.nav
+            id="mobile-nav-menu"
+            role="navigation"
+            aria-label="Mobile Navigation"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -157,7 +194,7 @@ export const Navbar: React.FC = () => {
               duration: reducedMotion ? 0 : 0.2,
               ease: [0.16, 1, 0.3, 1],
             }}
-            className="md:hidden overflow-hidden border-b border-[#1E2E4E] bg-[#0D1628] px-4 pt-2 pb-4 space-y-1"
+            className="relative z-50 md:hidden overflow-hidden border-b border-[#1E2E4E] bg-[#0D1628] px-4 pt-2 pb-4 space-y-1 shadow-2xl"
           >
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon
@@ -192,7 +229,7 @@ export const Navbar: React.FC = () => {
                 <span className="text-emerald-400">Online ({health?.status})</span>
               )}
             </div>
-          </motion.div>
+          </motion.nav>
         )}
       </AnimatePresence>
     </header>

@@ -35,11 +35,13 @@ import { RiskBadge } from '@/components/common/RiskBadge'
 import { PageHeader } from '@/components/common/PageHeader'
 import { AnimatedNumber } from '@/components/common/AnimatedNumber'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import { CHART_THEME } from '@/lib/tokens'
 import type { RiskLevel } from '@/types/api'
 
 export const DashboardPage: React.FC = () => {
+  useDocumentTitle('Command Center')
   const reducedMotion = usePrefersReducedMotion()
   const fetchSummary = useCallback(() => apiClient.getDashboardSummary(), [])
   const { data, loading, error, errorStatus, refetch } = useApi(fetchSummary, [])

@@ -24,4 +24,22 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    chunkSizeWarningLimit: 2500,
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          if (id.includes('node_modules/recharts')) {
+            return 'recharts'
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'motion'
+          }
+          if (id.includes('node_modules/react-force-graph') || id.includes('node_modules/d3')) {
+            return 'graph'
+          }
+        },
+      },
+    },
+  },
 })

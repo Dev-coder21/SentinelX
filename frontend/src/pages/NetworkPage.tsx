@@ -26,6 +26,7 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { PageHeader } from '@/components/common/PageHeader'
 import { StatCard } from '@/components/common/StatCard'
 import { RiskBadge } from '@/components/common/RiskBadge'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { NetworkNode, RiskLevel } from '@/types/api'
 
 // Extended Graph Node for d3 layout
@@ -86,6 +87,7 @@ function getNodeRadius(node: GraphNode): number {
 }
 
 export const NetworkPage: React.FC = () => {
+  useDocumentTitle('Supplier Dependency Network')
   const fetchNetwork = useCallback(() => apiClient.getNetwork(), [])
   const { data: network, loading, error, errorStatus, refetch } = useApi(fetchNetwork, [])
 

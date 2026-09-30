@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import {
   Search,
@@ -15,21 +15,18 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { PageHeader } from '@/components/common/PageHeader'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getRiskLevel } from '@/lib/risk'
 import type { Supplier } from '@/types/api'
 
 export const SuppliersPage: React.FC = () => {
+  useDocumentTitle('Supplier Directory')
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const initialRegion = searchParams.get('region') || 'all'
-  const initialRisk = searchParams.get('risk') || 'all'
-  const initialTier = searchParams.get('tier') || 'all'
-  const initialSearch = searchParams.get('search') || ''
-
-  const [search, setSearch] = useState(initialSearch)
-  const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion)
-  const [selectedRisk, setSelectedRisk] = useState<string>(initialRisk)
-  const [selectedTier, setSelectedTier] = useState<string>(initialTier)
+  const selectedRegion = searchParams.get('region') || 'all'
+  const selectedRisk = (searchParams.get('risk') || 'all').toUpperCase()
+  const selectedTier = searchParams.get('tier') || 'all'
+  const search = searchParams.get('search') || ''
 
   const fetchSuppliers = useCallback(() => apiClient.getSuppliers({ limit: 100 }), [])
   const { data: suppliers, loading, error, errorStatus, refetch } = useApi(fetchSuppliers, [])
@@ -46,25 +43,21 @@ export const SuppliersPage: React.FC = () => {
     if (updates.region !== undefined) {
       if (updates.region === 'all') nextParams.delete('region')
       else nextParams.set('region', updates.region)
-      setSelectedRegion(updates.region)
     }
 
     if (updates.risk !== undefined) {
       if (updates.risk === 'all') nextParams.delete('risk')
       else nextParams.set('risk', updates.risk)
-      setSelectedRisk(updates.risk)
     }
 
     if (updates.tier !== undefined) {
       if (updates.tier === 'all') nextParams.delete('tier')
       else nextParams.set('tier', updates.tier)
-      setSelectedTier(updates.tier)
     }
 
     if (updates.search !== undefined) {
       if (!updates.search.trim()) nextParams.delete('search')
       else nextParams.set('search', updates.search)
-      setSearch(updates.search)
     }
 
     setSearchParams(nextParams, { replace: true })
@@ -107,10 +100,6 @@ export const SuppliersPage: React.FC = () => {
     search !== '' || selectedRegion !== 'all' || selectedTier !== 'all' || selectedRisk !== 'all'
 
   const clearAllFilters = () => {
-    setSearch('')
-    setSelectedRegion('all')
-    setSelectedTier('all')
-    setSelectedRisk('all')
     setSearchParams({}, { replace: true })
   }
 
@@ -232,7 +221,15 @@ export const SuppliersPage: React.FC = () => {
       </div>
 
       {/* Supplier List / Table */}
-      {filtered.length === 0 ? (
+      {suppliers && suppliers.length === 0 ? (
+        <EmptyState
+          icon={<Building2 className="w-6 h-6" />}
+          title="No suppliers found in registry"
+          description="The supply chain registry database is currently empty. Run risk pipeline refresh to ingest suppliers."
+          actionLabel="Refresh Registry"
+          onAction={refetch}
+        />
+      ) : filtered.length === 0 ? (
         <EmptyState
           icon={<Building2 className="w-6 h-6" />}
           title="No suppliers match filter criteria"
@@ -246,13 +243,13 @@ export const SuppliersPage: React.FC = () => {
             <table className="w-full text-left text-sm border-collapse">
               <thead>
                 <tr className="border-b border-[#1E2E4E] bg-[#0A1120] text-slate-400 text-[11px] font-mono uppercase tracking-wider">
-                  <th className="py-2.5 px-3.5 font-semibold">Supplier Name</th>
-                  <th className="py-2.5 px-3.5 font-semibold">Category</th>
-                  <th className="py-2.5 px-3.5 font-semibold">Corridor & Country</th>
-                  <th className="py-2.5 px-3.5 font-semibold text-center">Criticality</th>
-                  <th className="py-2.5 px-3.5 font-semibold text-right">Annual Spend</th>
-                  <th className="py-2.5 px-3.5 font-semibold text-center">Risk Level</th>
-                  <th className="py-2.5 px-3.5 font-semibold text-right">Actions</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold">Supplier Name</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold">Category</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold">Corridor & Country</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold text-center">Criticality</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold text-right">Annual Spend</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold text-center">Risk Level</th>
+                  <th scope="col" className="py-2.5 px-3.5 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#16233B]">

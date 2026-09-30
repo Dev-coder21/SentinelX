@@ -23,6 +23,7 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
 import { RiskBadge } from '@/components/common/RiskBadge'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { PrioritizeResponse } from '@/types/api'
 
 // Animated currency counter settling strictly on the exact API value
@@ -68,6 +69,7 @@ const AnimatedCurrency: React.FC<{
 }
 
 export const PrioritizationPage: React.FC = () => {
+  useDocumentTitle('Mitigation Prioritization')
   const reducedMotion = usePrefersReducedMotion()
 
   const fetchLatestPlan = useCallback(() => apiClient.getLatestMitigationPlan(), [])
@@ -90,14 +92,41 @@ export const PrioritizationPage: React.FC = () => {
     { label: '$1.0M', value: 1000000 },
   ]
 
+  const handleBudgetChange = (value: string) => {
+    setBudgetInput(value)
+    if (submitError) setSubmitError(null)
+  }
+
+  const handleSelectPreset = (value: number) => {
+    setBudgetInput(String(value))
+    if (submitError) setSubmitError(null)
+  }
+
   const handleRunOptimization = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (submitting) return
     setSubmitError(null)
 
-    const budgetNum = parseFloat(budgetInput.replace(/,/g, ''))
+    const raw = budgetInput.trim().replace(/[$,]/g, '')
+    if (!raw) {
+      setSubmitError('Please enter a capital budget constraint amount.')
+      return
+    }
 
-    if (isNaN(budgetNum) || budgetNum < 0) {
-      setSubmitError('Please enter a valid non-negative capital budget constraint (e.g. $500,000).')
+    const budgetNum = Number(raw)
+
+    if (isNaN(budgetNum) || !isFinite(budgetNum)) {
+      setSubmitError('Please enter a valid numeric budget constraint (e.g. $500,000).')
+      return
+    }
+
+    if (budgetNum < 0) {
+      setSubmitError('Budget constraint cannot be negative. Please enter a non-negative amount (≥ $0).')
+      return
+    }
+
+    if (budgetNum > 1000000000) {
+      setSubmitError('Budget constraint exceeds maximum operational ceiling ($1,000,000,000).')
       return
     }
 
@@ -172,8 +201,8 @@ export const PrioritizationPage: React.FC = () => {
                       key={preset.value}
                       type="button"
                       disabled={submitting}
-                      onClick={() => setBudgetInput(String(preset.value))}
-                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#080E1C] hover:bg-[#121D34] text-slate-300 hover:text-[#3DD6C4] border border-[#1E2E4E] transition-colors"
+                      onClick={() => handleSelectPreset(preset.value)}
+                      className="px-2 py-0.5 rounded text-[10px] font-mono bg-[#080E1C] hover:bg-[#121D34] text-slate-300 hover:text-[#3DD6C4] border border-[#1E2E4E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {preset.label}
                     </button>
@@ -185,12 +214,11 @@ export const PrioritizationPage: React.FC = () => {
                 <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   id="mitigation-budget-input"
-                  type="number"
-                  min="0"
-                  step="10000"
+                  type="text"
+                  inputMode="numeric"
                   disabled={submitting}
                   value={budgetInput}
-                  onChange={(e) => setBudgetInput(e.target.value)}
+                  onChange={(e) => handleBudgetChange(e.target.value)}
                   placeholder="500000"
                   className="w-full pl-9 pr-4 py-2.5 bg-[#080E1C] border border-[#1E2E4E] rounded-md text-sm font-mono text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-[#3DD6C4] focus:border-[#3DD6C4] disabled:opacity-50"
                 />

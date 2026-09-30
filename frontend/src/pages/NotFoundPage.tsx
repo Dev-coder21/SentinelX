@@ -1,8 +1,10 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
 import { ShieldAlert, Home } from 'lucide-react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 
 export const NotFoundPage: React.FC = () => {
+  useDocumentTitle('Page Not Found')
   return (
     <div className="min-h-[50vh] flex flex-col items-center justify-center text-center p-8 space-y-4">
       <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mb-2">

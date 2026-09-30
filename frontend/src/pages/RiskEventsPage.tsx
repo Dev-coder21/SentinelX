@@ -19,26 +19,22 @@ import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
 import { motion } from 'framer-motion'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import type { RiskEvent } from '@/types/api'
 
 const PAGE_SIZE = 15
 
 export const RiskEventsPage: React.FC = () => {
+  useDocumentTitle('Risk Events Feed')
   const reducedMotion = usePrefersReducedMotion()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const initialRegion = searchParams.get('region') || 'all'
-  const initialSource = searchParams.get('source') || 'all'
-  const initialType = searchParams.get('type') || 'all'
-  const initialSeverity = searchParams.get('severity') || 'all'
-  const initialSearch = searchParams.get('search') || ''
-
-  const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion)
-  const [selectedSource, setSelectedSource] = useState<string>(initialSource)
-  const [selectedType, setSelectedType] = useState<string>(initialType)
-  const [selectedSeverity, setSelectedSeverity] = useState<string>(initialSeverity)
-  const [search, setSearch] = useState<string>(initialSearch)
+  const selectedRegion = searchParams.get('region') || 'all'
+  const selectedSource = searchParams.get('source') || 'all'
+  const selectedType = searchParams.get('type') || 'all'
+  const selectedSeverity = (searchParams.get('severity') || 'all').toUpperCase()
+  const search = searchParams.get('search') || ''
   const [page, setPage] = useState<number>(0)
 
   // Fetch up to 200 events from the backend (the maximum supported limit)
@@ -73,38 +69,15 @@ export const RiskEventsPage: React.FC = () => {
     } else {
       next.set(key, val)
     }
+    setPage(0)
     setSearchParams(next, { replace: true })
   }
 
-  const handleRegionChange = (reg: string) => {
-    setSelectedRegion(reg)
-    setPage(0)
-    updateParam('region', reg)
-  }
-
-  const handleSourceChange = (src: string) => {
-    setSelectedSource(src)
-    setPage(0)
-    updateParam('source', src)
-  }
-
-  const handleTypeChange = (typ: string) => {
-    setSelectedType(typ)
-    setPage(0)
-    updateParam('type', typ)
-  }
-
-  const handleSeverityChange = (sev: string) => {
-    setSelectedSeverity(sev)
-    setPage(0)
-    updateParam('severity', sev)
-  }
-
-  const handleSearchChange = (q: string) => {
-    setSearch(q)
-    setPage(0)
-    updateParam('search', q)
-  }
+  const handleRegionChange = (reg: string) => updateParam('region', reg)
+  const handleSourceChange = (src: string) => updateParam('source', src)
+  const handleTypeChange = (typ: string) => updateParam('type', typ)
+  const handleSeverityChange = (sev: string) => updateParam('severity', sev)
+  const handleSearchChange = (q: string) => updateParam('search', q)
 
   // Client-side multi-axis filtering
   const filteredEvents = useMemo(() => {
@@ -152,11 +125,6 @@ export const RiskEventsPage: React.FC = () => {
     selectedSeverity !== 'all'
 
   const clearAllFilters = () => {
-    setSearch('')
-    setSelectedRegion('all')
-    setSelectedSource('all')
-    setSelectedType('all')
-    setSelectedSeverity('all')
     setPage(0)
     setSearchParams({}, { replace: true })
   }
@@ -303,7 +271,15 @@ export const RiskEventsPage: React.FC = () => {
       </div>
 
       {/* Events List */}
-      {paginatedEvents.length === 0 ? (
+      {events && events.length === 0 ? (
+        <EmptyState
+          icon={<AlertTriangle className="w-6 h-6" />}
+          title="No risk events recorded"
+          description="The system has not ingested any geopolitical news or severe weather signals yet."
+          actionLabel="Refetch Signals"
+          onAction={refetch}
+        />
+      ) : paginatedEvents.length === 0 ? (
         <EmptyState
           icon={<AlertTriangle className="w-6 h-6" />}
           title="No events matching criteria"

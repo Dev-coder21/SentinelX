@@ -36,6 +36,7 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { AnimatedNumber } from '@/components/common/AnimatedNumber'
 import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import { CHART_THEME } from '@/lib/tokens'
 import type { ContributingFactors, TopEventDetail } from '@/types/api'
@@ -50,6 +51,7 @@ export const SupplierDetailPage: React.FC = () => {
   }, [id])
 
   const { data: supplier, loading, error, errorStatus, refetch } = useApi(fetchDetail, [id])
+  useDocumentTitle(supplier ? `${supplier.name} | Supplier Detail` : 'Supplier Detail')
 
   if (loading && !supplier) {
     return <LoadingState message="Fetching supplier telemetry and historical audit..." />
