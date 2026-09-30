@@ -207,6 +207,38 @@ Every persisted score includes a transparent JSONB payload:
 
 ---
 
+## ⏱️ Scheduled Risk Refresh & Historical Tracking (Phase 5)
+
+SentinelX features an automated orchestration lifecycle to continuously ingest, classify, fuse, and persist supplier risk snapshots without manual intervention or heavy messaging infrastructure.
+
+### 1. Unified Orchestration Workflow
+The unified pipeline (`refresh_risk_pipeline`) executes a four-stage process:
+1. **Signal Ingestion**: Ingests fresh news and meteorological events across active supplier regions.
+2. **NLP Classification**: Analyzes sentiment and classifies newly arrived, unclassified events via Gemini (or deterministic fallback).
+3. **Multi-Event Risk Fusion**: Evaluates geographic recency, compounding effects, and criticality multipliers per supplier.
+4. **Historical Persistence**: Stores timestamped snapshots in `risk_scores` while preserving complete audit history.
+
+### 2. Lightweight Scheduling with APScheduler
+SentinelX utilizes **APScheduler** (`BackgroundScheduler`) embedded within FastAPI's `lifespan` handler:
+- Configurable interval: `RISK_REFRESH_INTERVAL_MINUTES=60` (default 60 minutes).
+- Guarded activation: `ENABLE_SCHEDULER=False` by default to prevent background threads during test execution or module imports.
+- Zero external infrastructure: avoids Celery, Redis, or Kafka overhead for single-node deployments.
+
+### 3. Failure Isolation & Idempotency
+- **Provider Resilience**: If GDELT or Open-Meteo experiences timeouts or rate limits, the unaffected provider continues, unclassified events are processed, and suppliers are safely rescored.
+- **Deduplication**: Ingested articles are fingerprinted with SHA-256 hashes to prevent duplicate database rows.
+- **Quota Efficiency**: Events record `classification_source` upon evaluation; subsequent refresh ticks bypass already-classified events, eliminating unnecessary Gemini API consumption.
+
+### 4. Executive Dashboard Summary API
+- `GET /dashboard/summary` (and `/api/v1/dashboard/summary`): Computes aggregated fleet metrics in a single joined subquery without N+1 query bottlenecks:
+  - Total supplier count & fleet average risk score (0–100)
+  - Risk tier distribution (`high_risk_supplier_count`, `medium_risk_supplier_count`, `low_risk_supplier_count`)
+  - Highest-risk supplier entity and score
+  - Active-window (last 14 days) external disruption count
+  - Criticality tier distribution
+
+---
+
 ## 📍 Current Development Status
 
 - [x] **Phase 1: Foundation & Architecture (COMPLETE)**
@@ -228,8 +260,15 @@ Every persisted score includes a transparent JSONB payload:
   - Structured Gemini API event classification with deterministic keyword fallback.
   - Mathematical risk fusion formula with recency decay, multi-event compounding, and criticality exposure amplification.
   - Persistent explainable `risk_scores` with JSONB contributing factors and trend tracking.
-  - 47 comprehensive backend tests passing.
-- [ ] **Phase 5: LP Resource Allocation & Knapsack Prioritization (Next)**
+- [x] **Phase 5: Scheduled Risk Refresh & Historical Tracking (COMPLETE)**
+  - Unified orchestration workflow `refresh_risk_pipeline()` with failure isolation.
+  - Manual execution job `python -m app.jobs.refresh_risk` with concise status logging.
+  - Configurable APScheduler lifecycle integrated via FastAPI lifespan.
+  - Snapshot persistence preserving historical risk trajectories without duplicate events.
+  - High-performance `GET /dashboard/summary` endpoint for executive KPI cards.
+  - 59 comprehensive backend tests passing.
+- [ ] **Phase 6: LP Resource Allocation & Knapsack Prioritization (Next)**
   - Linear programming mitigation optimization using PuLP.
-- [ ] **Phase 6: Frontend Command Center & Force-Directed Graph**
+- [ ] **Phase 7: Frontend Command Center & Force-Directed Graph**
   - Interactive visualization, risk radar, and mitigation simulator.
+

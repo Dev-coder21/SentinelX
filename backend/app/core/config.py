@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_PROVIDER: str = "gemini"
 
+    # Scheduled Refresh (Phase 5)
+    ENABLE_SCHEDULER: bool = False
+    RISK_REFRESH_INTERVAL_MINUTES: int = 60
+
     # CORS configuration for frontend
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",

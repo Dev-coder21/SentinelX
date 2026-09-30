@@ -23,6 +23,7 @@ class IngestionSummary:
     duplicates_skipped: int = 0
     provider_failures: int = 0
     failure_details: List[str] = field(default_factory=list)
+    events_by_provider: dict[str, int] = field(default_factory=dict)
 
     def print_summary(self) -> None:
         print("\n" + "=" * 55)
@@ -93,6 +94,9 @@ class IngestionService:
                     logger.info(f"Ingesting signals via '{provider.name}' for region '{region}'...")
                     events = provider.fetch_events(region)
                     summary.events_received += len(events)
+                    summary.events_by_provider[provider.name] = (
+                        summary.events_by_provider.get(provider.name, 0) + len(events)
+                    )
 
                     for evt in events:
                         # Check database deduplication by unique fingerprint or ID
