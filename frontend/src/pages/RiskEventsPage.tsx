@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   Filter,
@@ -7,6 +8,8 @@ import {
   ChevronRight,
   RefreshCw,
   Search,
+  Building2,
+  X,
 } from 'lucide-react'
 import { apiClient } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
@@ -14,21 +17,33 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
+import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import type { RiskEvent } from '@/types/api'
 
 const PAGE_SIZE = 15
 
 export const RiskEventsPage: React.FC = () => {
-  const [selectedRegion, setSelectedRegion] = useState<string>('all')
-  const [selectedSource, setSelectedSource] = useState<string>('all')
-  const [search, setSearch] = useState<string>('')
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const initialRegion = searchParams.get('region') || 'all'
+  const initialSource = searchParams.get('source') || 'all'
+  const initialType = searchParams.get('type') || 'all'
+  const initialSeverity = searchParams.get('severity') || 'all'
+  const initialSearch = searchParams.get('search') || ''
+
+  const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion)
+  const [selectedSource, setSelectedSource] = useState<string>(initialSource)
+  const [selectedType, setSelectedType] = useState<string>(initialType)
+  const [selectedSeverity, setSelectedSeverity] = useState<string>(initialSeverity)
+  const [search, setSearch] = useState<string>(initialSearch)
   const [page, setPage] = useState<number>(0)
 
+  // Fetch up to 200 events from the backend (the maximum supported limit)
   const fetchEvents = useCallback(() => {
     return apiClient.getRiskEvents({
       region: selectedRegion === 'all' ? undefined : selectedRegion,
       source: selectedSource === 'all' ? undefined : selectedSource,
-      limit: 100, // Fetch up to 100 to allow client-side search & pagination
+      limit: 200,
       offset: 0,
     })
   }, [selectedRegion, selectedSource])
@@ -38,19 +53,85 @@ export const RiskEventsPage: React.FC = () => {
     selectedSource,
   ])
 
-  // Client-side search filtering
+  // Extract distinct event types from active events
+  const eventTypes = useMemo(() => {
+    if (!events) return []
+    const set = new Set<string>()
+    for (const e of events) {
+      if (e.event_type) set.add(e.event_type)
+    }
+    return Array.from(set).sort()
+  }, [events])
+
+  const updateParam = (key: string, val: string) => {
+    const next = new URLSearchParams(searchParams)
+    if (val === 'all' || !val) {
+      next.delete(key)
+    } else {
+      next.set(key, val)
+    }
+    setSearchParams(next, { replace: true })
+  }
+
+  const handleRegionChange = (reg: string) => {
+    setSelectedRegion(reg)
+    setPage(0)
+    updateParam('region', reg)
+  }
+
+  const handleSourceChange = (src: string) => {
+    setSelectedSource(src)
+    setPage(0)
+    updateParam('source', src)
+  }
+
+  const handleTypeChange = (typ: string) => {
+    setSelectedType(typ)
+    setPage(0)
+    updateParam('type', typ)
+  }
+
+  const handleSeverityChange = (sev: string) => {
+    setSelectedSeverity(sev)
+    setPage(0)
+    updateParam('severity', sev)
+  }
+
+  const handleSearchChange = (q: string) => {
+    setSearch(q)
+    setPage(0)
+    updateParam('search', q)
+  }
+
+  // Client-side multi-axis filtering
   const filteredEvents = useMemo(() => {
     if (!events) return []
-    if (!search.trim()) return events
-    const q = search.toLowerCase()
-    return events.filter(
-      (e) =>
+    return events.filter((e) => {
+      // Search matching
+      const q = search.toLowerCase()
+      const matchSearch =
+        !q ||
         e.headline.toLowerCase().includes(q) ||
         (e.summary && e.summary.toLowerCase().includes(q)) ||
         e.event_type.toLowerCase().includes(q) ||
         e.region.toLowerCase().includes(q)
-    )
-  }, [events, search])
+
+      // Event type matching
+      const matchType = selectedType === 'all' || e.event_type === selectedType
+
+      // Severity matching
+      let matchSeverity = true
+      if (selectedSeverity !== 'all' && typeof e.severity === 'number') {
+        const sevLevel = getRiskLevel(e.severity)
+        if (selectedSeverity === 'CRITICAL') matchSeverity = sevLevel === 'CRITICAL'
+        else if (selectedSeverity === 'HIGH') matchSeverity = sevLevel === 'HIGH' || sevLevel === 'CRITICAL'
+        else if (selectedSeverity === 'MEDIUM') matchSeverity = sevLevel === 'MEDIUM'
+        else if (selectedSeverity === 'LOW') matchSeverity = sevLevel === 'LOW'
+      }
+
+      return matchSearch && matchType && matchSeverity
+    })
+  }, [events, search, selectedType, selectedSeverity])
 
   // Pagination slice
   const paginatedEvents = useMemo(() => {
@@ -59,6 +140,23 @@ export const RiskEventsPage: React.FC = () => {
   }, [filteredEvents, page])
 
   const totalPages = Math.ceil(filteredEvents.length / PAGE_SIZE)
+
+  const hasActiveFilters =
+    search !== '' ||
+    selectedRegion !== 'all' ||
+    selectedSource !== 'all' ||
+    selectedType !== 'all' ||
+    selectedSeverity !== 'all'
+
+  const clearAllFilters = () => {
+    setSearch('')
+    setSelectedRegion('all')
+    setSelectedSource('all')
+    setSelectedType('all')
+    setSelectedSeverity('all')
+    setPage(0)
+    setSearchParams({}, { replace: true })
+  }
 
   if (loading && !events) {
     return <LoadingState message="Fetching live geopolitical, news, and weather signals..." />
@@ -80,6 +178,13 @@ export const RiskEventsPage: React.FC = () => {
       <PageHeader
         title="Risk Events Feed"
         subtitle="External real-world signals normalized from GDELT global news and Open-Meteo severe weather."
+        badge={
+          events ? (
+            <span className="text-xs font-mono bg-[#162036] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2C48]">
+              {filteredEvents.length} of {events.length} Signals
+            </span>
+          ) : undefined
+        }
         actions={
           <button
             type="button"
@@ -93,55 +198,104 @@ export const RiskEventsPage: React.FC = () => {
       />
 
       {/* Filter and Search Controls */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search headline, summary, or signal type..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(0)
-            }}
-            className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
-          />
-        </div>
+      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4 space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Search */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search headline, summary, region, or signal type..."
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => handleSearchChange('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-        {/* Region Filter */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select
-            aria-label="Filter events by corridor region"
-            value={selectedRegion}
-            onChange={(e) => {
-              setSelectedRegion(e.target.value)
-              setPage(0)
-            }}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs sm:text-sm text-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
-          >
-            <option value="all">All Corridors</option>
-            <option value="East Asia">East Asia</option>
-            <option value="Southeast Asia">Southeast Asia</option>
-            <option value="North America">North America</option>
-            <option value="Europe">Europe</option>
-          </select>
+          {/* Filters row */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-1.5 text-slate-400 text-xs font-mono">
+              <Filter className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Filters:</span>
+            </div>
 
-          {/* Source Filter */}
-          <select
-            aria-label="Filter events by intelligence source"
-            value={selectedSource}
-            onChange={(e) => {
-              setSelectedSource(e.target.value)
-              setPage(0)
-            }}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs sm:text-sm text-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
-          >
-            <option value="all">All Sources</option>
-            <option value="GDELT">GDELT News</option>
-            <option value="Open-Meteo">Open-Meteo Weather</option>
-          </select>
+            {/* Region Filter */}
+            <select
+              aria-label="Filter events by corridor region"
+              value={selectedRegion}
+              onChange={(e) => handleRegionChange(e.target.value)}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            >
+              <option value="all">All Corridors</option>
+              <option value="East Asia">East Asia</option>
+              <option value="Southeast Asia">Southeast Asia</option>
+              <option value="North America">North America</option>
+              <option value="Europe">Europe</option>
+            </select>
+
+            {/* Source Filter */}
+            <select
+              aria-label="Filter events by intelligence source"
+              value={selectedSource}
+              onChange={(e) => handleSourceChange(e.target.value)}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            >
+              <option value="all">All Sources</option>
+              <option value="GDELT">GDELT News</option>
+              <option value="Open-Meteo">Open-Meteo Weather</option>
+            </select>
+
+            {/* Event Type Filter */}
+            {eventTypes.length > 0 && (
+              <select
+                aria-label="Filter events by disruption type"
+                value={selectedType}
+                onChange={(e) => handleTypeChange(e.target.value)}
+                className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+              >
+                <option value="all">All Event Types</option>
+                {eventTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {t.replace(/_/g, ' ')}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Severity Filter */}
+            <select
+              aria-label="Filter events by minimum severity"
+              value={selectedSeverity}
+              onChange={(e) => handleSeverityChange(e.target.value)}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 font-mono"
+            >
+              <option value="all">All Severities</option>
+              <option value="CRITICAL">Critical (≥ 80.0)</option>
+              <option value="HIGH">High (≥ 70.0)</option>
+              <option value="MEDIUM">Medium (40.0–69.9)</option>
+              <option value="LOW">Low (&lt; 40.0)</option>
+            </select>
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-2 rounded-lg bg-[#0E1626] border border-[#1E2C48] transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -152,12 +306,7 @@ export const RiskEventsPage: React.FC = () => {
           title="No events matching criteria"
           description="Try broadening your corridor or source filters, or clearing search."
           actionLabel="Clear Filters"
-          onAction={() => {
-            setSearch('')
-            setSelectedRegion('all')
-            setSelectedSource('all')
-            setPage(0)
-          }}
+          onAction={clearAllFilters}
         />
       ) : (
         <div className="space-y-3">
@@ -171,7 +320,7 @@ export const RiskEventsPage: React.FC = () => {
                   {/* Badges / metadata */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="text-[10px] font-mono uppercase bg-[#18253E] text-slate-200 px-2 py-0.5 rounded border border-[#233352] font-semibold">
-                      {evt.event_type.replace('_', ' ')}
+                      {evt.event_type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs font-mono text-slate-400">
                       {new Date(evt.detected_at).toLocaleString([], {
@@ -182,7 +331,16 @@ export const RiskEventsPage: React.FC = () => {
                         minute: '2-digit',
                       })}
                     </span>
-                    <span className="text-xs text-slate-400">• Corridor: <strong className="text-slate-300">{evt.region}</strong></span>
+                    <span className="text-xs text-slate-400">
+                      • Corridor:{' '}
+                      <Link
+                        to={`/suppliers?region=${encodeURIComponent(evt.region)}`}
+                        className="text-slate-300 hover:text-[#3DD6C4] font-medium underline underline-offset-2"
+                        title="Filter supplier directory to this corridor"
+                      >
+                        {evt.region}
+                      </Link>
+                    </span>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded">
                       {evt.source}
                     </span>
@@ -199,33 +357,38 @@ export const RiskEventsPage: React.FC = () => {
                     </p>
                   )}
 
-                  {/* Raw URL if available */}
-                  {evt.raw_url && (
-                    <a
-                      href={evt.raw_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center space-x-1 text-xs text-[#3DD6C4] hover:underline pt-1"
+                  {/* Actions & Links */}
+                  <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
+                    <Link
+                      to={`/suppliers?region=${encodeURIComponent(evt.region)}`}
+                      className="inline-flex items-center space-x-1 text-[#3DD6C4] hover:underline"
                     >
-                      <span>Original Provider Signal</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
+                      <Building2 className="w-3.5 h-3.5" />
+                      <span>View corridor suppliers</span>
+                    </Link>
+
+                    {evt.raw_url && (
+                      <a
+                        href={evt.raw_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-1 text-slate-400 hover:text-white"
+                      >
+                        <span>Original Provider Signal</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
                 </div>
 
                 {/* Severity & Confidence */}
                 <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 bg-[#0E1626] border border-[#1E2C48] p-3 rounded-lg min-w-[110px] text-right font-mono">
                   {typeof evt.severity === 'number' && (
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase block">Severity</span>
+                      <span className="text-[10px] text-slate-500 uppercase block">Severity</span>
                       <span
-                        className={`text-sm font-bold ${
-                          evt.severity >= 70
-                            ? 'text-rose-400'
-                            : evt.severity >= 40
-                              ? 'text-amber-400'
-                              : 'text-emerald-400'
-                        }`}
+                        className="text-sm font-bold"
+                        style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
                       >
                         {evt.severity.toFixed(1)}/100
                       </span>
@@ -234,7 +397,7 @@ export const RiskEventsPage: React.FC = () => {
 
                   {typeof evt.confidence === 'number' && (
                     <div>
-                      <span className="text-[10px] text-slate-400 uppercase block">Confidence</span>
+                      <span className="text-[10px] text-slate-500 uppercase block">Confidence</span>
                       <span className="text-xs text-slate-300">
                         {(evt.confidence * 100).toFixed(0)}%
                       </span>
@@ -248,26 +411,28 @@ export const RiskEventsPage: React.FC = () => {
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-4 border-t border-[#1E2C48] text-xs font-mono text-slate-400">
-              <span>
-                Page {page + 1} of {totalPages} ({filteredEvents.length} signals)
-              </span>
-
+              <div>
+                Showing Page <strong className="text-slate-200">{page + 1}</strong> of{' '}
+                <strong className="text-slate-200">{totalPages}</strong> ({filteredEvents.length} total events)
+              </div>
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
                   disabled={page === 0}
                   onClick={() => setPage((p) => Math.max(0, p - 1))}
-                  className="p-1.5 rounded-md bg-[#111A2E] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed text-slate-300"
+                  className="px-3 py-1 rounded bg-[#0E1626] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
                 >
-                  <ChevronLeft className="w-4 h-4" />
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span>Prev</span>
                 </button>
                 <button
                   type="button"
                   disabled={page >= totalPages - 1}
                   onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                  className="p-1.5 rounded-md bg-[#111A2E] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed text-slate-300"
+                  className="px-3 py-1 rounded bg-[#0E1626] border border-[#1E2C48] hover:bg-[#1A253E] disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center space-x-1 text-slate-300"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <span>Next</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
                 </button>
               </div>
             </div>

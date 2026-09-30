@@ -12,6 +12,13 @@ import {
   Layers,
   MapPin,
   DollarSign,
+  Share2,
+  SlidersHorizontal,
+  ExternalLink,
+  ShieldCheck,
+  CloudRain,
+  Newspaper,
+  Compass,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -27,6 +34,8 @@ import { useApi } from '@/hooks/useApi'
 import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { RiskBadge } from '@/components/common/RiskBadge'
+import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
+import type { ContributingFactors, TopEventDetail } from '@/types/api'
 
 export const SupplierDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>()
@@ -102,16 +111,56 @@ export const SupplierDetailPage: React.FC = () => {
     )
   }
 
+  const factors: ContributingFactors = supplier.contributing_factors || {}
+  const rawRisk = typeof factors.raw_risk === 'number' ? factors.raw_risk : null
+  const finalScore = typeof factors.final_score === 'number' ? factors.final_score : supplier.current_risk_score
+  const multiplier = typeof factors.criticality_multiplier === 'number' ? factors.criticality_multiplier : 1.0
+  const newsRisk = typeof factors.news_risk === 'number' ? factors.news_risk : 0.0
+  const weatherRisk = typeof factors.weather_risk === 'number' ? factors.weather_risk : 0.0
+  const eventCount = typeof factors.event_count === 'number' ? factors.event_count : (supplier.related_risk_events?.length || 0)
+  const eventTypes: string[] = Array.isArray(factors.event_types) ? factors.event_types : []
+  const topEvents: TopEventDetail[] = Array.isArray(factors.top_events) ? factors.top_events : []
+
   return (
     <div className="space-y-6">
-      {/* Back button */}
-      <Link
-        to="/suppliers"
-        className="inline-flex items-center space-x-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft className="w-4 h-4" />
-        <span>Back to Supplier Directory</span>
-      </Link>
+      {/* Top Navigation & Breadcrumbs */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          to="/suppliers"
+          className="inline-flex items-center space-x-1.5 text-xs font-mono text-slate-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span>Back to Supplier Directory</span>
+        </Link>
+
+        {/* Cross-page operational shortcuts */}
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to={`/network?select=${supplier.id}`}
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            title="Inspect supplier and blast-radius in dependency network"
+          >
+            <Share2 className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Inspect in Network</span>
+          </Link>
+          <Link
+            to="/prioritization"
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            title="Optimize mitigation allocations"
+          >
+            <SlidersHorizontal className="w-3.5 h-3.5 text-[#3DD6C4]" />
+            <span>LP Optimizer</span>
+          </Link>
+          <Link
+            to={`/risk-events?region=${encodeURIComponent(supplier.region)}`}
+            className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-mono transition-colors"
+            title="View signals in this corridor"
+          >
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span>Corridor Events</span>
+          </Link>
+        </div>
+      </div>
 
       {/* Header Profile Card */}
       <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-6">
@@ -132,7 +181,13 @@ export const SupplierDetailPage: React.FC = () => {
             <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
               <span className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                <strong className="text-slate-300">{supplier.region}</strong> ({supplier.country})
+                <Link
+                  to={`/suppliers?region=${encodeURIComponent(supplier.region)}`}
+                  className="text-slate-200 hover:text-[#3DD6C4] underline underline-offset-2"
+                >
+                  {supplier.region}
+                </Link>{' '}
+                ({supplier.country})
               </span>
               <span>•</span>
               <span className="flex items-center gap-1.5">
@@ -142,7 +197,10 @@ export const SupplierDetailPage: React.FC = () => {
               <span>•</span>
               <span className="flex items-center gap-1.5">
                 <DollarSign className="w-3.5 h-3.5 text-slate-400" />
-                Annual Spend: <strong className="text-slate-300 font-mono">${supplier.annual_spend.toLocaleString()}</strong>
+                Annual Spend:{' '}
+                <strong className="text-slate-300 font-mono">
+                  ${supplier.annual_spend.toLocaleString()}
+                </strong>
               </span>
             </div>
           </div>
@@ -155,7 +213,9 @@ export const SupplierDetailPage: React.FC = () => {
                 className={`text-xs font-mono font-bold px-2 py-0.5 rounded inline-block mt-0.5 ${
                   supplier.criticality_tier === 1
                     ? 'bg-rose-950/60 text-rose-300 border border-rose-800/60'
-                    : 'bg-amber-950/50 text-amber-300 border border-amber-800/50'
+                    : supplier.criticality_tier === 2
+                      ? 'bg-amber-950/50 text-amber-300 border border-amber-800/50'
+                      : 'bg-slate-800 text-slate-300 border border-slate-700'
                 }`}
               >
                 Tier {supplier.criticality_tier}
@@ -179,21 +239,218 @@ export const SupplierDetailPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Grid: Historical Trajectory & Contributing Risk Factors */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      {/* Mathematical Explainability: Contributing Risk Factors */}
+      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#1E2C48] pb-3">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#3DD6C4]" />
+              Explainable Risk Attribution & Mathematical Decomposition
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Deterministic fusion formula: Raw time-decayed corridor signals amplified by supplier criticality tier
+            </p>
+          </div>
+          <span className="text-xs font-mono text-slate-400 bg-[#0E1626] px-2.5 py-1 rounded border border-[#1E2C48] self-start sm:self-auto">
+            {eventCount} Correlated Signal{eventCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+
+        {/* 1. Mathematical Derivation Hierarchy */}
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-center">
+          {/* Raw Risk */}
+          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+              Raw Signal Exposure
+            </span>
+            <span className="text-xl font-bold font-mono text-slate-200">
+              {rawRisk !== null ? rawRisk.toFixed(1) : '—'}
+            </span>
+            <span className="text-[11px] text-slate-500 block mt-0.5">Sublinear saturation</span>
+          </div>
+
+          {/* Multiplication Operator */}
+          <div className="text-center text-slate-500 font-mono text-lg font-bold hidden md:block">
+            ×
+          </div>
+
+          {/* Criticality Multiplier */}
+          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+              Tier {supplier.criticality_tier} Multiplier
+            </span>
+            <span className="text-xl font-bold font-mono text-indigo-400">
+              {multiplier.toFixed(1)}×
+            </span>
+            <span className="text-[11px] text-slate-500 block mt-0.5">
+              {supplier.criticality_tier === 1 ? 'Primary Component' : supplier.criticality_tier === 2 ? 'Secondary Component' : 'Commodity'}
+            </span>
+          </div>
+
+          {/* Equal Operator */}
+          <div className="text-center text-slate-500 font-mono text-lg font-bold hidden md:block">
+            =
+          </div>
+
+          {/* Final Fused Score */}
+          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-3.5 text-center">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block mb-1">
+              Fused Supplier Risk
+            </span>
+            <span
+              className="text-2xl font-bold font-mono"
+              style={{ color: RISK_COLORS[getRiskLevel(finalScore)] }}
+            >
+              {typeof finalScore === 'number' ? finalScore.toFixed(1) : '0.0'}
+            </span>
+            <span className="text-[11px] text-slate-400 block mt-0.5 font-mono">
+              / 100 ({getRiskLevel(finalScore)})
+            </span>
+          </div>
+        </div>
+
+        {/* 2. Sub-factor breakdown: News vs Weather & Event Categories */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          {/* News and Weather Contributions */}
+          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-4 space-y-3">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+              Signal Source Attribution
+            </h3>
+
+            {/* News Bar */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-300 flex items-center gap-1.5">
+                  <Newspaper className="w-3.5 h-3.5 text-blue-400" />
+                  GDELT Geopolitical / News Signals
+                </span>
+                <span className="text-slate-300 font-bold">{newsRisk.toFixed(1)} / 100</span>
+              </div>
+              <div className="w-full bg-[#182338] h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-blue-400 h-full rounded-full transition-all"
+                  style={{ width: `${Math.min(100, newsRisk)}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Weather Bar */}
+            <div className="space-y-1">
+              <div className="flex justify-between text-xs font-mono">
+                <span className="text-slate-300 flex items-center gap-1.5">
+                  <CloudRain className="w-3.5 h-3.5 text-teal-400" />
+                  Open-Meteo Severe Weather / Climate
+                </span>
+                <span className="text-slate-300 font-bold">{weatherRisk.toFixed(1)} / 100</span>
+              </div>
+              <div className="w-full bg-[#182338] h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-teal-400 h-full rounded-full transition-all"
+                  style={{ width: `${Math.min(100, weatherRisk)}%` }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Classified Disruption Categories */}
+          <div className="bg-[#0E1626] border border-[#1E2C48] rounded-lg p-4 space-y-2.5">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+              Detected Disruption Types ({eventTypes.length})
+            </h3>
+            {eventTypes.length > 0 ? (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {eventTypes.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center px-2.5 py-1 rounded text-xs font-mono bg-[#16253B] text-slate-200 border border-[#233959]"
+                  >
+                    {t.replace(/_/g, ' ')}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-slate-400 pt-2">
+                No active external disruptions classified in this corridor.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* 3. Top Contributing External Risk Events */}
+        {topEvents.length > 0 && (
+          <div className="space-y-2 pt-1">
+            <h3 className="text-xs font-semibold text-slate-300 uppercase tracking-wider font-mono">
+              Top Contributing Real-World Risk Signals
+            </h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-[#1E2C48] text-slate-400 font-mono uppercase tracking-wider">
+                    <th className="pb-2 font-semibold">Signal Headline</th>
+                    <th className="pb-2 font-semibold">Type</th>
+                    <th className="pb-2 font-semibold">Source</th>
+                    <th className="pb-2 font-semibold text-center">Severity</th>
+                    <th className="pb-2 font-semibold text-right">Detected</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#182338]">
+                  {topEvents.map((evt) => (
+                    <tr key={evt.id} className="hover:bg-[#152035]/40 transition-colors">
+                      <td className="py-2.5 pr-3 font-medium text-slate-200">
+                        <Link
+                          to={`/risk-events?search=${encodeURIComponent(evt.headline.slice(0, 30))}`}
+                          className="hover:text-[#3DD6C4] inline-flex items-center gap-1 text-xs"
+                          title="Inspect signal in investigation feed"
+                        >
+                          <span className="line-clamp-1">{evt.headline}</span>
+                          <ExternalLink className="w-3 h-3 text-slate-500 shrink-0" />
+                        </Link>
+                      </td>
+                      <td className="py-2.5 font-mono text-slate-300 capitalize">
+                        {evt.event_type.replace(/_/g, ' ')}
+                      </td>
+                      <td className="py-2.5 font-mono text-slate-400">{evt.source}</td>
+                      <td className="py-2.5 text-center font-mono">
+                        {typeof evt.severity === 'number' ? (
+                          <span
+                            className="font-bold"
+                            style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
+                          >
+                            {evt.severity.toFixed(0)}
+                          </span>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="py-2.5 text-right font-mono text-slate-400">
+                        {evt.detected_at
+                          ? new Date(evt.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric' })
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Grid: Historical Trajectory & Product Line Dependencies */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Risk Score History Chart */}
-        <div className="lg:col-span-2 bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-sm font-semibold text-white flex items-center gap-2">
+              <h2 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Activity className="w-4 h-4 text-[#3DD6C4]" />
                 Risk Score Trajectory
-              </h3>
-              <p className="text-xs text-slate-400">Audit trail of fused risk scores over time</p>
+              </h2>
+              <p className="text-xs text-slate-400">Audit trail of fused risk scores across pipeline runs</p>
             </div>
             {historyData.length > 0 && (
-              <span className="text-xs font-mono text-slate-400">
-                {historyData.length} observation{historyData.length > 1 ? 's' : ''}
+              <span className="text-xs font-mono text-slate-400 bg-[#0E1626] px-2 py-0.5 rounded border border-[#1E2C48]">
+                {historyData.length} snapshot{historyData.length > 1 ? 's' : ''}
               </span>
             )}
           </div>
@@ -201,7 +458,7 @@ export const SupplierDetailPage: React.FC = () => {
           <div className="h-64 w-full">
             {historyData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={historyData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={historyData} margin={{ top: 10, right: 15, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#1E2C48" vertical={false} />
                   <XAxis
                     dataKey="formattedTime"
@@ -222,6 +479,7 @@ export const SupplierDetailPage: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
+                    formatter={(value: any) => [`${Number(value).toFixed(1)} / 100`, 'Risk Score']}
                   />
                   <Line
                     type="monotone"
@@ -242,44 +500,22 @@ export const SupplierDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Contributing Factors Breakdown */}
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1">Contributing Factors</h3>
-          <p className="text-xs text-slate-400 mb-4">Explainable risk signal attribution</p>
-
-          {supplier.contributing_factors && Object.keys(supplier.contributing_factors).length > 0 ? (
-            <div className="space-y-3 font-mono text-xs">
-              {Object.entries(supplier.contributing_factors).map(([key, value]) => (
-                <div key={key} className="bg-[#0E1626] border border-[#1E2C48] p-3 rounded-lg">
-                  <div className="flex justify-between text-slate-400 uppercase text-[10px] tracking-wider mb-1">
-                    <span>{key.replace(/_/g, ' ')}</span>
-                  </div>
-                  <div className="text-slate-200 font-semibold">
-                    {typeof value === 'object' && value !== null
-                      ? JSON.stringify(value, null, 2)
-                      : String(value)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400">
-              Deterministic baseline evaluation active (no anomalous event spikes).
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Downstream Dependencies & Affected Product Lines */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Product Line Dependencies */}
         <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-            <Link2 className="w-4 h-4 text-indigo-400" />
-            Downstream Product Dependencies ({supplier.dependencies?.length || 0})
-          </h3>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-indigo-400" />
+              Connected Product Lines ({supplier.dependencies?.length || 0})
+            </h2>
+            <Link
+              to={`/network?select=${supplier.id}`}
+              className="text-xs font-mono text-[#3DD6C4] hover:underline"
+            >
+              Inspect in Graph →
+            </Link>
+          </div>
           <p className="text-xs text-slate-400 mb-4">
-            Finished product lines that depend on this supplier component
+            Finished product lines dependent on this supplier component
           </p>
 
           {supplier.dependencies && supplier.dependencies.length > 0 ? (
@@ -289,11 +525,16 @@ export const SupplierDetailPage: React.FC = () => {
                   key={dep.id}
                   className="flex items-center justify-between p-3 rounded-lg bg-[#0E1626] border border-[#1E2C48]"
                 >
-                  <div className="font-medium text-slate-200 text-xs">
-                    {dep.company_product}
+                  <div>
+                    <div className="font-medium text-slate-200 text-xs">
+                      {dep.company_product}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-mono mt-0.5">
+                      Downstream manufacturing line
+                    </div>
                   </div>
-                  <div className="text-xs font-mono text-slate-400">
-                    Impact Weight: <strong className="text-indigo-400">{dep.dependency_weight.toFixed(2)}</strong>
+                  <div className="text-xs font-mono text-slate-300 bg-[#141E33] px-2 py-1 rounded border border-[#233352]">
+                    Weight: <strong className="text-indigo-400">{dep.dependency_weight.toFixed(2)}</strong>
                   </div>
                 </div>
               ))}
@@ -302,45 +543,66 @@ export const SupplierDetailPage: React.FC = () => {
             <p className="text-xs text-slate-400">No registered downstream product links.</p>
           )}
         </div>
+      </div>
 
-        {/* Related Regional Risk Events */}
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4 text-amber-400" />
-            Active Regional Events ({supplier.related_risk_events?.length || 0})
-          </h3>
-          <p className="text-xs text-slate-400 mb-4">
-            Signals detected within {supplier.region} corridor
-          </p>
+      {/* Corridor External Risk Events Feed */}
+      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              Corridor External Risk Signals ({supplier.related_risk_events?.length || 0})
+            </h2>
+            <p className="text-xs text-slate-400">
+              Active external events detected within the {supplier.region} corridor
+            </p>
+          </div>
+          <Link
+            to={`/risk-events?region=${encodeURIComponent(supplier.region)}`}
+            className="text-xs font-mono text-[#3DD6C4] hover:underline"
+          >
+            All Corridor Signals →
+          </Link>
+        </div>
 
-          {supplier.related_risk_events && supplier.related_risk_events.length > 0 ? (
-            <div className="space-y-3">
-              {supplier.related_risk_events.slice(0, 5).map((evt) => (
-                <div
-                  key={evt.id}
-                  className="p-3 rounded-lg bg-[#0E1626] border border-[#1E2C48] space-y-1"
-                >
-                  <div className="flex items-center justify-between text-[11px] font-mono">
-                    <span className="text-slate-400 uppercase bg-slate-800 px-1.5 py-0.5 rounded">
-                      {evt.event_type}
+        {supplier.related_risk_events && supplier.related_risk_events.length > 0 ? (
+          <div className="space-y-3">
+            {supplier.related_risk_events.slice(0, 6).map((evt) => (
+              <div
+                key={evt.id}
+                className="p-3 rounded-lg bg-[#0E1626] border border-[#1E2C48] flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+              >
+                <div className="space-y-1 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+                    <span className="text-slate-300 uppercase bg-[#16253B] px-1.5 py-0.5 rounded border border-[#233959]">
+                      {evt.event_type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-slate-400">
-                      {new Date(evt.detected_at).toLocaleDateString()}
+                      {new Date(evt.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
+                    <span className="text-slate-400">• Source: {evt.source}</span>
+                  </div>
+                  <h3 className="text-xs font-medium text-slate-200 line-clamp-1">
+                    {evt.headline}
+                  </h3>
+                </div>
+
+                {typeof evt.severity === 'number' && (
+                  <div className="text-right shrink-0">
+                    <span
+                      className="text-xs font-mono font-bold"
+                      style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
+                    >
+                      Sev {evt.severity.toFixed(0)}/100
                     </span>
                   </div>
-                  <h4 className="text-xs font-medium text-slate-200 line-clamp-1">{evt.headline}</h4>
-                  {typeof evt.severity === 'number' && (
-                    <span className="text-[10px] font-mono text-amber-400 block">
-                      Severity: {evt.severity.toFixed(0)}/100
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-xs text-slate-400">No active external events in this region.</p>
-          )}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-slate-400">No active external events in this region.</p>
+        )}
       </div>
     </div>
   )

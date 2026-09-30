@@ -353,8 +353,15 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Rich action cards communicating complete decision rationale: Risk status → Mitigation Cost → Protected Revenue → Value-Efficiency ROI multiple (`Protected Revenue / Cost`) → Deterministic Rationale.
   - Meaningful zero-selection outcome state for insufficient budgets without application error.
   - Direct workflow navigation: "Inspect in Network" deep-links directly to `/network?select=${supplier_id}` auto-focusing the node on the 2D dependency graph; "Telemetry Detail" links to `/suppliers/${id}`.
-  - Full accessibility compliance with `prefers-reduced-motion` integration, 0 lint warnings, clean Vite production build, and 86/86 backend pytest passing.
-- [ ] **Phase 11: Production Polish, End-to-End Validation & Deployment (Next)**
-  - End-to-end integration validation, performance audit, Docker containerization, and final production hardening.
+- [x] **Phase 11: Risk Intelligence UI (COMPLETE)**
+  - Cohesive, information-rich risk intelligence user experience across Dashboard, Supplier Directory, Supplier Detail, and Risk Events Feed.
+  - Centralized risk taxonomy in `src/lib/risk.ts` enforcing strict SentinelX thresholds: LOW (< 40), MEDIUM (40–69.9), HIGH (70–79.9), CRITICAL (≥ 80) with consistent colors.
+  - Dashboard: 5-column fleet KPI grid with direct filter links, chronological historical trend with dual indicators (Avg Fleet Risk + High-Risk Supplier Count), clickable regional risk rows with direct corridor drill-down, and interactive risk tier distribution with count & percentage badges.
+  - Supplier Directory: URL search parameters (`?region=...`, `?risk=...`, `?tier=...`, `?search=...`) for instant deep-linking, multi-axis filtering, and per-supplier "Inspect in Network" shortcut.
+  - Supplier Detail: Deepest investigation surface featuring explainable mathematical decomposition (`raw_risk` × `tier_multiplier` → `final_score`), news vs. weather signal attribution bars, classified disruption badges, top contributing real-world signals, and product dependencies.
+  - Risk Events Feed: Unified multi-axis investigation feed supporting corridor, source, disruption type, and severity filtering, with corridor-to-supplier cross-page navigation.
+  - Zero mock data; 100% real API integration, 0 oxlint warnings, clean Vite production build, and 86/86 backend pytest passing.
+- [ ] **Phase 12: Design System & Visual Direction (Next)**
+  - Comprehensive design system overhaul, visual hierarchy, curated typography, and operational theme refinement.
 
 

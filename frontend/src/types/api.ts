@@ -30,10 +30,32 @@ export interface Supplier {
   product_lines: string[]
 }
 
+export interface TopEventDetail {
+  id: string
+  headline: string
+  event_type: string
+  source: string
+  severity: number | null
+  detected_at: string | null
+}
+
+export interface ContributingFactors {
+  raw_risk?: number
+  final_score?: number
+  criticality_tier?: number
+  criticality_multiplier?: number
+  news_risk?: number
+  weather_risk?: number
+  event_count?: number
+  event_types?: string[]
+  top_events?: TopEventDetail[]
+  [key: string]: unknown
+}
+
 export interface SupplierDetail extends Supplier {
   previous_risk_score: number | null
   risk_trend: RiskTrend | null
-  contributing_factors: Record<string, unknown> | null
+  contributing_factors: ContributingFactors | null
   dependencies: Dependency[]
   product_lines_affected: string[]
   risk_history: RiskScore[]

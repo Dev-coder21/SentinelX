@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   Search,
   Building2,
   ChevronRight,
   Filter,
+  Share2,
+  X,
 } from 'lucide-react'
 import { apiClient } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
@@ -13,15 +15,60 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { PageHeader } from '@/components/common/PageHeader'
+import { getRiskLevel } from '@/lib/risk'
 import type { Supplier } from '@/types/api'
 
 export const SuppliersPage: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const initialRegion = searchParams.get('region') || 'all'
+  const initialRisk = searchParams.get('risk') || 'all'
+  const initialTier = searchParams.get('tier') || 'all'
+  const initialSearch = searchParams.get('search') || ''
+
+  const [search, setSearch] = useState(initialSearch)
+  const [selectedRegion, setSelectedRegion] = useState<string>(initialRegion)
+  const [selectedRisk, setSelectedRisk] = useState<string>(initialRisk)
+  const [selectedTier, setSelectedTier] = useState<string>(initialTier)
+
   const fetchSuppliers = useCallback(() => apiClient.getSuppliers({ limit: 100 }), [])
   const { data: suppliers, loading, error, errorStatus, refetch } = useApi(fetchSuppliers, [])
 
-  const [search, setSearch] = useState('')
-  const [selectedRegion, setSelectedRegion] = useState<string>('all')
-  const [selectedTier, setSelectedTier] = useState<string>('all')
+  // Update URL search parameters when filters change
+  const updateFilter = (updates: {
+    region?: string
+    risk?: string
+    tier?: string
+    search?: string
+  }) => {
+    const nextParams = new URLSearchParams(searchParams)
+
+    if (updates.region !== undefined) {
+      if (updates.region === 'all') nextParams.delete('region')
+      else nextParams.set('region', updates.region)
+      setSelectedRegion(updates.region)
+    }
+
+    if (updates.risk !== undefined) {
+      if (updates.risk === 'all') nextParams.delete('risk')
+      else nextParams.set('risk', updates.risk)
+      setSelectedRisk(updates.risk)
+    }
+
+    if (updates.tier !== undefined) {
+      if (updates.tier === 'all') nextParams.delete('tier')
+      else nextParams.set('tier', updates.tier)
+      setSelectedTier(updates.tier)
+    }
+
+    if (updates.search !== undefined) {
+      if (!updates.search.trim()) nextParams.delete('search')
+      else nextParams.set('search', updates.search)
+      setSearch(updates.search)
+    }
+
+    setSearchParams(nextParams, { replace: true })
+  }
 
   // Extract unique regions for filter
   const regions = useMemo(() => {
@@ -34,17 +81,38 @@ export const SuppliersPage: React.FC = () => {
   const filtered = useMemo(() => {
     if (!suppliers) return []
     return suppliers.filter((s) => {
+      const q = search.toLowerCase()
       const matchSearch =
-        s.name.toLowerCase().includes(search.toLowerCase()) ||
-        s.category.toLowerCase().includes(search.toLowerCase()) ||
-        s.country.toLowerCase().includes(search.toLowerCase())
+        !q ||
+        s.name.toLowerCase().includes(q) ||
+        s.category.toLowerCase().includes(q) ||
+        s.country.toLowerCase().includes(q) ||
+        s.region.toLowerCase().includes(q)
 
       const matchRegion = selectedRegion === 'all' || s.region === selectedRegion
       const matchTier = selectedTier === 'all' || String(s.criticality_tier) === selectedTier
 
-      return matchSearch && matchRegion && matchTier
+      const resolvedRisk = (s.risk_level || getRiskLevel(s.current_risk_score)).toUpperCase()
+      const matchRisk =
+        selectedRisk === 'all' ||
+        (selectedRisk === 'HIGH_CRITICAL'
+          ? resolvedRisk === 'HIGH' || resolvedRisk === 'CRITICAL'
+          : resolvedRisk === selectedRisk.toUpperCase())
+
+      return matchSearch && matchRegion && matchTier && matchRisk
     })
-  }, [suppliers, search, selectedRegion, selectedTier])
+  }, [suppliers, search, selectedRegion, selectedTier, selectedRisk])
+
+  const hasActiveFilters =
+    search !== '' || selectedRegion !== 'all' || selectedTier !== 'all' || selectedRisk !== 'all'
+
+  const clearAllFilters = () => {
+    setSearch('')
+    setSelectedRegion('all')
+    setSelectedTier('all')
+    setSelectedRisk('all')
+    setSearchParams({}, { replace: true })
+  }
 
   if (loading && !suppliers) {
     return <LoadingState message="Loading supplier directory..." />
@@ -69,55 +137,97 @@ export const SuppliersPage: React.FC = () => {
         badge={
           suppliers ? (
             <span className="text-xs font-mono bg-[#162036] text-[#3DD6C4] px-2.5 py-1 rounded-md border border-[#1E2C48]">
-              {suppliers.length} Active Nodes
+              {filtered.length} of {suppliers.length} Nodes
             </span>
           ) : undefined
         }
       />
 
       {/* Search and Filters Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4">
-        {/* Search input */}
-        <div className="relative flex-1">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search by supplier name, category, or country..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
-          />
-        </div>
+      <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-4 space-y-3">
+        <div className="flex flex-col md:flex-row gap-3">
+          {/* Search input */}
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Search by supplier name, category, country, or region..."
+              value={search}
+              onChange={(e) => updateFilter({ search: e.target.value })}
+              className="w-full pl-9 pr-4 py-2 bg-[#0B1120] border border-[#1E2C48] rounded-lg text-sm text-slate-200 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 focus:border-[#3DD6C4]"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => updateFilter({ search: '' })}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
 
-        {/* Region filter */}
-        <div className="flex items-center space-x-2">
-          <Filter className="w-4 h-4 text-slate-400" />
-          <select
-            aria-label="Filter by geographic region"
-            value={selectedRegion}
-            onChange={(e) => setSelectedRegion(e.target.value)}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs sm:text-sm text-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
-          >
-            <option value="all">All Regions</option>
-            {regions.map((reg) => (
-              <option key={reg} value={reg}>
-                {reg}
-              </option>
-            ))}
-          </select>
+          {/* Filter dropdowns */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex items-center space-x-1.5 text-slate-400 text-xs font-mono">
+              <Filter className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Filters:</span>
+            </div>
 
-          {/* Tier filter */}
-          <select
-            aria-label="Filter by criticality tier"
-            value={selectedTier}
-            onChange={(e) => setSelectedTier(e.target.value)}
-            className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs sm:text-sm text-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
-          >
-            <option value="all">All Tiers</option>
-            <option value="1">Tier 1 (Critical)</option>
-            <option value="2">Tier 2 (High)</option>
-            <option value="3">Tier 3 (Moderate)</option>
-          </select>
+            {/* Region filter */}
+            <select
+              aria-label="Filter by geographic region"
+              value={selectedRegion}
+              onChange={(e) => updateFilter({ region: e.target.value })}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            >
+              <option value="all">All Corridors</option>
+              {regions.map((reg) => (
+                <option key={reg} value={reg}>
+                  {reg}
+                </option>
+              ))}
+            </select>
+
+            {/* Risk filter */}
+            <select
+              aria-label="Filter by risk severity bracket"
+              value={selectedRisk}
+              onChange={(e) => updateFilter({ risk: e.target.value })}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50 font-mono"
+            >
+              <option value="all">All Risk Levels</option>
+              <option value="CRITICAL">Critical (≥ 80.0)</option>
+              <option value="HIGH">High (70.0–79.9)</option>
+              <option value="MEDIUM">Medium (40.0–69.9)</option>
+              <option value="LOW">Low (&lt; 40.0)</option>
+            </select>
+
+            {/* Tier filter */}
+            <select
+              aria-label="Filter by criticality tier"
+              value={selectedTier}
+              onChange={(e) => updateFilter({ tier: e.target.value })}
+              className="bg-[#0B1120] border border-[#1E2C48] rounded-lg text-xs text-slate-200 px-2.5 py-2 focus:outline-none focus:ring-2 focus:ring-[#3DD6C4]/50"
+            >
+              <option value="all">All Tiers</option>
+              <option value="1">Tier 1 (Critical)</option>
+              <option value="2">Tier 2 (High)</option>
+              <option value="3">Tier 3 (Moderate)</option>
+            </select>
+
+            {/* Clear filters pill */}
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="text-xs font-mono text-slate-400 hover:text-rose-400 px-2.5 py-2 rounded-lg bg-[#0E1626] border border-[#1E2C48] transition-colors"
+              >
+                Reset Filters
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -125,14 +235,10 @@ export const SuppliersPage: React.FC = () => {
       {filtered.length === 0 ? (
         <EmptyState
           icon={<Building2 className="w-6 h-6" />}
-          title="No suppliers match criteria"
-          description="Try adjusting your search query, region, or tier filters."
+          title="No suppliers match filter criteria"
+          description="Try adjusting your search query, corridor region, or risk severity filters."
           actionLabel="Clear Filters"
-          onAction={() => {
-            setSearch('')
-            setSelectedRegion('all')
-            setSelectedTier('all')
-          }}
+          onAction={clearAllFilters}
         />
       ) : (
         <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl overflow-hidden shadow-sm">
@@ -146,31 +252,40 @@ export const SuppliersPage: React.FC = () => {
                   <th className="py-3 px-4 font-semibold text-center">Criticality</th>
                   <th className="py-3 px-4 font-semibold text-right">Annual Spend</th>
                   <th className="py-3 px-4 font-semibold text-center">Risk Level</th>
-                  <th className="py-3 px-4 font-semibold text-right">Action</th>
+                  <th className="py-3 px-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#182338]">
                 {filtered.map((s: Supplier) => (
                   <tr
                     key={s.id}
-                    className="hover:bg-[#152035]/60 transition-colors group cursor-pointer"
+                    className="hover:bg-[#152035]/60 transition-colors group"
                   >
                     <td className="py-3.5 px-4 font-medium text-slate-100">
                       <Link
                         to={`/suppliers/${s.id}`}
                         className="hover:text-[#3DD6C4] transition-colors flex items-center gap-2"
                       >
-                        <Building2 className="w-4 h-4 text-slate-400 group-hover:text-[#3DD6C4] transition-colors" />
-                        <span>{s.name}</span>
+                        <Building2 className="w-4 h-4 text-slate-400 group-hover:text-[#3DD6C4] transition-colors shrink-0" />
+                        <span className="font-semibold">{s.name}</span>
                       </Link>
                     </td>
 
                     <td className="py-3.5 px-4 text-xs text-slate-300 font-mono">
-                      {s.category}
+                      <span className="bg-[#152036] px-2 py-0.5 rounded border border-[#1E2C48]">
+                        {s.category}
+                      </span>
                     </td>
 
-                    <td className="py-3.5 px-4 text-xs text-slate-400">
-                      <span className="text-slate-200">{s.region}</span>
+                    <td className="py-3.5 px-4 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => updateFilter({ region: s.region })}
+                        className="text-slate-300 hover:text-[#3DD6C4] underline underline-offset-2 transition-colors"
+                        title={`Filter fleet to ${s.region}`}
+                      >
+                        {s.region}
+                      </button>
                       <span className="text-slate-400 ml-1">({s.country})</span>
                     </td>
 
@@ -201,13 +316,23 @@ export const SuppliersPage: React.FC = () => {
                     </td>
 
                     <td className="py-3.5 px-4 text-right">
-                      <Link
-                        to={`/suppliers/${s.id}`}
-                        className="inline-flex items-center space-x-1 text-xs text-[#3DD6C4] hover:text-[#5eead4] font-medium transition-colors"
-                      >
-                        <span>Details</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
-                      </Link>
+                      <div className="inline-flex items-center space-x-2">
+                        <Link
+                          to={`/network?select=${s.id}`}
+                          className="inline-flex items-center space-x-1 text-xs text-slate-400 hover:text-white px-2 py-1 rounded bg-[#0E1626] hover:bg-[#1E2C48] border border-[#1E2C48] transition-colors"
+                          title="Inspect node in dependency network"
+                        >
+                          <Share2 className="w-3 h-3 text-indigo-400" />
+                          <span className="hidden lg:inline font-mono text-[11px]">Graph</span>
+                        </Link>
+                        <Link
+                          to={`/suppliers/${s.id}`}
+                          className="inline-flex items-center space-x-1 text-xs text-[#3DD6C4] hover:text-[#5eead4] font-medium px-2 py-1 rounded bg-[#16253B] hover:bg-[#1F3352] border border-[#2B436E] transition-colors"
+                        >
+                          <span>Inspect</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
                     </td>
                   </tr>
                 ))}

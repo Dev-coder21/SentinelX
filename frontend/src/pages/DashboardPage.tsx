@@ -10,11 +10,13 @@ import {
   RefreshCw,
   Activity,
   Layers,
+  CheckCircle2,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -22,6 +24,7 @@ import {
   BarChart,
   Bar,
   Cell,
+  Legend,
 } from 'recharts'
 import { apiClient } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
@@ -30,13 +33,8 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { StatCard } from '@/components/common/StatCard'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { PageHeader } from '@/components/common/PageHeader'
-
-const RISK_LEVEL_COLORS: Record<string, string> = {
-  LOW: '#10B981',
-  MEDIUM: '#F59E0B',
-  HIGH: '#F97316',
-  CRITICAL: '#F43F5E',
-}
+import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
+import type { RiskLevel } from '@/types/api'
 
 export const DashboardPage: React.FC = () => {
   const fetchSummary = useCallback(() => apiClient.getDashboardSummary(), [])
@@ -65,8 +63,12 @@ export const DashboardPage: React.FC = () => {
   const recentEvents = data?.recent_events || []
   const latestOpt = data?.latest_optimization
 
-  // Format historical trend dates for Recharts
-  const formattedTrend = riskTrend.map((pt) => ({
+  // Chronologically order historical trend points
+  const sortedTrend = [...riskTrend].sort(
+    (a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+  )
+
+  const formattedTrend = sortedTrend.map((pt) => ({
     ...pt,
     formattedTime: new Date(pt.timestamp).toLocaleTimeString([], {
       month: 'short',
@@ -94,40 +96,63 @@ export const DashboardPage: React.FC = () => {
         }
       />
 
-      {/* Top Fleet KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard
-          label="Total Monitored Suppliers"
-          value={overview?.total_suppliers ?? 0}
-          icon={<Building2 className="w-5 h-5" />}
-          subtext="Deterministic Tier-1 & Tier-2 Network"
-        />
-        <StatCard
-          label="Fleet Average Risk"
-          value={overview ? `${overview.average_risk.toFixed(1)}/100` : '—'}
-          variant={
-            (overview?.average_risk ?? 0) >= 70
-              ? 'critical'
-              : (overview?.average_risk ?? 0) >= 40
-                ? 'warning'
-                : 'success'
-          }
-          icon={<Activity className="w-5 h-5" />}
-          subtext="Weighted external NLP & weather signals"
-        />
-        <StatCard
-          label="High / Critical Risk Suppliers"
-          value={overview?.high_risk_supplier_count ?? 0}
-          variant={(overview?.high_risk_supplier_count ?? 0) > 0 ? 'critical' : 'success'}
-          icon={<ShieldAlert className="w-5 h-5" />}
-          subtext={`Score >= 70.0 (${overview?.medium_risk_supplier_count ?? 0} medium, ${overview?.low_risk_supplier_count ?? 0} low)`}
-        />
-        <StatCard
-          label="Active 14-Day Risk Events"
-          value={overview?.recent_event_count ?? 0}
-          icon={<AlertTriangle className="w-5 h-5" />}
-          subtext="GDELT news & Open-Meteo extreme weather"
-        />
+      {/* Top Fleet KPI Cards: 5-column responsive grid communicating total, fleet avg, high, medium, low */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <Link to="/suppliers" className="group">
+          <StatCard
+            label="Total Fleet"
+            value={overview?.total_suppliers ?? 0}
+            icon={<Building2 className="w-4 h-4 group-hover:text-[#3DD6C4] transition-colors" />}
+            subtext="Tier-1 & Tier-2 Network"
+            className="group-hover:border-[#3DD6C4]/40 transition-all h-full"
+          />
+        </Link>
+        <div>
+          <StatCard
+            label="Fleet Avg Risk"
+            value={overview ? `${overview.average_risk.toFixed(1)}/100` : '—'}
+            variant={
+              (overview?.average_risk ?? 0) >= 70
+                ? 'critical'
+                : (overview?.average_risk ?? 0) >= 40
+                  ? 'warning'
+                  : 'success'
+            }
+            icon={<Activity className="w-4 h-4" />}
+            subtext="Fused NLP & Weather"
+            className="h-full"
+          />
+        </div>
+        <Link to="/suppliers?risk=HIGH" className="group">
+          <StatCard
+            label="High / Critical"
+            value={overview?.high_risk_supplier_count ?? 0}
+            variant={(overview?.high_risk_supplier_count ?? 0) > 0 ? 'critical' : 'success'}
+            icon={<ShieldAlert className="w-4 h-4 group-hover:text-rose-400 transition-colors" />}
+            subtext="Score ≥ 70.0 (Filter)"
+            className="group-hover:border-rose-500/50 transition-all h-full"
+          />
+        </Link>
+        <Link to="/suppliers?risk=MEDIUM" className="group">
+          <StatCard
+            label="Medium Risk"
+            value={overview?.medium_risk_supplier_count ?? 0}
+            variant="warning"
+            icon={<AlertTriangle className="w-4 h-4 group-hover:text-amber-400 transition-colors" />}
+            subtext="Score 40.0–69.9 (Filter)"
+            className="group-hover:border-amber-500/50 transition-all h-full"
+          />
+        </Link>
+        <Link to="/suppliers?risk=LOW" className="group">
+          <StatCard
+            label="Low Risk"
+            value={overview?.low_risk_supplier_count ?? 0}
+            variant="success"
+            icon={<CheckCircle2 className="w-4 h-4 group-hover:text-emerald-400 transition-colors" />}
+            subtext="Score < 40.0 (Filter)"
+            className="group-hover:border-emerald-500/50 transition-all h-full"
+          />
+        </Link>
       </div>
 
       {/* Highest Risk Alert Banner & Latest Optimization Teaser */}
@@ -153,24 +178,44 @@ export const DashboardPage: React.FC = () => {
                   {overview.highest_risk_supplier.name}
                 </h4>
                 <div className="flex flex-wrap items-center gap-3 mt-1.5 text-xs text-slate-400">
-                  <span>Region: <strong className="text-slate-300">{overview.highest_risk_supplier.region}</strong></span>
+                  <span>
+                    Corridor:{' '}
+                    <Link
+                      to={`/suppliers?region=${encodeURIComponent(overview.highest_risk_supplier.region)}`}
+                      className="text-slate-300 hover:text-[#3DD6C4] underline underline-offset-2"
+                    >
+                      {overview.highest_risk_supplier.region}
+                    </Link>
+                  </span>
                   <span>•</span>
-                  <span>Criticality: <strong className="text-slate-300">Tier {overview.highest_risk_supplier.criticality_tier}</strong></span>
+                  <span>
+                    Criticality: <strong className="text-slate-300">Tier {overview.highest_risk_supplier.criticality_tier}</strong>
+                  </span>
                   {overview.highest_risk_supplier.category && (
                     <>
                       <span>•</span>
-                      <span>Category: <strong className="text-slate-300">{overview.highest_risk_supplier.category}</strong></span>
+                      <span>
+                        Category: <strong className="text-slate-300">{overview.highest_risk_supplier.category}</strong>
+                      </span>
                     </>
                   )}
                 </div>
               </div>
-              <Link
-                to={`/suppliers/${overview.highest_risk_supplier.id}`}
-                className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/30 text-xs font-medium transition-colors self-start sm:self-center"
-              >
-                <span>Inspect Node</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </Link>
+              <div className="flex items-center gap-2 self-start sm:self-center">
+                <Link
+                  to={`/network?select=${overview.highest_risk_supplier.id}`}
+                  className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-lg bg-[#141E33] hover:bg-[#1D2B4A] text-slate-300 hover:text-white border border-[#233352] text-xs font-medium transition-colors"
+                >
+                  <span>Network</span>
+                </Link>
+                <Link
+                  to={`/suppliers/${overview.highest_risk_supplier.id}`}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-[#1E2C48] hover:bg-[#25375A] text-[#3DD6C4] border border-[#3DD6C4]/30 text-xs font-medium transition-colors"
+                >
+                  <span>Investigate Node</span>
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
           ) : (
             <p className="text-sm text-slate-400">No high risk supplier detected in the active baseline.</p>
@@ -235,19 +280,24 @@ export const DashboardPage: React.FC = () => {
             <div>
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#3DD6C4]" />
-                Fleet Risk Trajectory (Historical Snapshots)
+                Fleet Risk Trajectory & High-Risk Counts
               </h3>
-              <p className="text-xs text-slate-400">Average risk score tracked across refresh intervals</p>
+              <p className="text-xs text-slate-400">Chronological audit trail of fleet average risk and high-risk supplier count</p>
             </div>
+            {formattedTrend.length > 0 && (
+              <span className="text-[11px] font-mono text-slate-400 bg-[#0E1626] px-2 py-0.5 rounded border border-[#1E2C48]">
+                {formattedTrend.length} observation{formattedTrend.length > 1 ? 's' : ''}
+              </span>
+            )}
           </div>
 
           <div className="h-64 w-full">
             {formattedTrend.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={formattedTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <AreaChart data={formattedTrend} margin={{ top: 10, right: 20, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#3DD6C4" stopOpacity={0.3} />
+                      <stop offset="5%" stopColor="#3DD6C4" stopOpacity={0.35} />
                       <stop offset="95%" stopColor="#3DD6C4" stopOpacity={0.0} />
                     </linearGradient>
                   </defs>
@@ -259,8 +309,17 @@ export const DashboardPage: React.FC = () => {
                     tickLine={false}
                   />
                   <YAxis
+                    yAxisId="left"
                     domain={[0, 100]}
                     stroke="#64748B"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    yAxisId="right"
+                    orientation="right"
+                    domain={[0, 'auto']}
+                    stroke="#F43F5E"
                     tick={{ fontSize: 11 }}
                     tickLine={false}
                   />
@@ -271,8 +330,19 @@ export const DashboardPage: React.FC = () => {
                       borderRadius: '8px',
                       fontSize: '12px',
                     }}
+                    formatter={(value: any, name: any) => {
+                      if (name === 'Avg Fleet Risk') return [`${Number(value).toFixed(1)} / 100`, name]
+                      return [`${value} suppliers`, name]
+                    }}
+                  />
+                  <Legend
+                    verticalAlign="top"
+                    align="right"
+                    iconType="circle"
+                    wrapperStyle={{ fontSize: '11px', paddingBottom: '8px' }}
                   />
                   <Area
+                    yAxisId="left"
                     type="monotone"
                     dataKey="average_risk"
                     name="Avg Fleet Risk"
@@ -280,6 +350,16 @@ export const DashboardPage: React.FC = () => {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#riskGrad)"
+                  />
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="high_risk_count"
+                    name="High-Risk Suppliers"
+                    stroke="#F43F5E"
+                    strokeWidth={2}
+                    strokeDasharray="4 4"
+                    dot={{ fill: '#F43F5E', r: 3 }}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -292,53 +372,84 @@ export const DashboardPage: React.FC = () => {
         </div>
 
         {/* Risk Distribution Breakdown */}
-        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
+        <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5 flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-2">
               <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                 <Layers className="w-4 h-4 text-[#8B7CFF]" />
                 Risk Tier Distribution
               </h3>
-              <p className="text-xs text-slate-400">Supplier count per risk severity bracket</p>
+              <span className="text-[11px] font-mono text-slate-400">
+                {overview?.total_suppliers ?? 0} Total
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mb-3">Supplier volume and percentage per risk severity</p>
+
+            <div className="h-44 w-full">
+              {riskDist.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={riskDist} layout="vertical" margin={{ top: 5, right: 15, left: 10, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1E2C48" horizontal={false} />
+                    <XAxis type="number" stroke="#64748B" tick={{ fontSize: 11 }} />
+                    <YAxis
+                      dataKey="level"
+                      type="category"
+                      stroke="#94A3B8"
+                      tick={{ fontSize: 11, fontWeight: 500 }}
+                      width={65}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#0E1626',
+                        borderColor: '#1E2C48',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                      formatter={(_val: any, _name: any, item: any) => {
+                        const payload = item?.payload
+                        if (!payload) return [_val, _name]
+                        return [`${payload.count} suppliers (${payload.percentage.toFixed(1)}%)`, payload.level]
+                      }}
+                    />
+                    <Bar dataKey="count" name="Suppliers" radius={[0, 4, 4, 0]}>
+                      {riskDist.map((entry) => (
+                        <Cell
+                          key={`cell-${entry.level}`}
+                          fill={RISK_COLORS[entry.level as RiskLevel] || '#64748B'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="h-full flex items-center justify-center text-xs text-slate-400">
+                  No risk distribution available.
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="h-64 w-full">
-            {riskDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={riskDist} layout="vertical" margin={{ top: 10, right: 20, left: 10, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1E2C48" horizontal={false} />
-                  <XAxis type="number" stroke="#64748B" tick={{ fontSize: 11 }} />
-                  <YAxis
-                    dataKey="level"
-                    type="category"
-                    stroke="#94A3B8"
-                    tick={{ fontSize: 11, fontWeight: 500 }}
-                    width={65}
+          {/* Interactive Tier Filter Links */}
+          <div className="grid grid-cols-2 gap-2 pt-3 border-t border-[#1E2C48] mt-2">
+            {riskDist.map((item) => (
+              <Link
+                key={item.level}
+                to={`/suppliers?risk=${item.level}`}
+                className="flex items-center justify-between p-2 rounded-lg bg-[#0E1626] hover:bg-[#152035] border border-[#1E2C48] hover:border-[#2A3E63] transition-colors text-xs font-mono group"
+              >
+                <div className="flex items-center space-x-1.5">
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: RISK_COLORS[item.level as RiskLevel] || '#64748B' }}
                   />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: '#0E1626',
-                      borderColor: '#1E2C48',
-                      borderRadius: '8px',
-                      fontSize: '12px',
-                    }}
-                  />
-                  <Bar dataKey="count" name="Suppliers" radius={[0, 4, 4, 0]}>
-                    {riskDist.map((entry) => (
-                      <Cell
-                        key={`cell-${entry.level}`}
-                        fill={RISK_LEVEL_COLORS[entry.level] || '#64748B'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-xs text-slate-400">
-                No risk distribution available.
-              </div>
-            )}
+                  <span className="text-slate-300 group-hover:text-white font-medium">{item.level}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-white font-bold">{item.count}</span>
+                  <span className="text-slate-500 text-[10px] ml-1">({item.percentage.toFixed(0)}%)</span>
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
@@ -347,7 +458,10 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Regional Aggregation Table */}
         <div className="lg:col-span-2 bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1">Regional Risk Concentration</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-white">Regional Risk Concentration</h3>
+            <span className="text-xs text-slate-400 font-mono">Click region to filter directory</span>
+          </div>
           <p className="text-xs text-slate-400 mb-4">
             Aggregated supplier exposure by primary operating corridor
           </p>
@@ -360,21 +474,36 @@ export const DashboardPage: React.FC = () => {
                   <th className="pb-3 font-semibold text-center">Suppliers</th>
                   <th className="pb-3 font-semibold text-center">Average Risk</th>
                   <th className="pb-3 font-semibold text-center">Peak Risk</th>
-                  <th className="pb-3 font-semibold text-right">High-Risk Nodes</th>
+                  <th className="pb-3 font-semibold text-center">High-Risk Nodes</th>
+                  <th className="pb-3 font-semibold text-right">Investigation</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#182338]">
                 {regionalRisk.map((r) => (
                   <tr key={r.region} className="hover:bg-[#152035]/50 transition-colors">
-                    <td className="py-3 font-medium text-slate-200">{r.region}</td>
+                    <td className="py-3 font-medium text-slate-200">
+                      <Link
+                        to={`/suppliers?region=${encodeURIComponent(r.region)}`}
+                        className="hover:text-[#3DD6C4] inline-flex items-center gap-1 font-medium transition-colors"
+                      >
+                        <span>{r.region}</span>
+                        <ArrowUpRight className="w-3 h-3 text-slate-500 hover:text-[#3DD6C4]" />
+                      </Link>
+                    </td>
                     <td className="py-3 text-center font-mono text-slate-300">{r.supplier_count}</td>
                     <td className="py-3 text-center">
-                      <span className="font-mono font-semibold text-slate-200">
+                      <span
+                        className="font-mono font-semibold px-2 py-0.5 rounded text-xs"
+                        style={{
+                          color: RISK_COLORS[getRiskLevel(r.average_risk)],
+                          backgroundColor: `${RISK_COLORS[getRiskLevel(r.average_risk)]}15`,
+                        }}
+                      >
                         {r.average_risk.toFixed(1)}
                       </span>
                     </td>
                     <td className="py-3 text-center font-mono text-slate-400">{r.highest_risk.toFixed(1)}</td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 text-center">
                       {r.high_risk_supplier_count > 0 ? (
                         <span className="inline-block px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/60 text-rose-300 border border-rose-800/50">
                           {r.high_risk_supplier_count} critical
@@ -382,6 +511,14 @@ export const DashboardPage: React.FC = () => {
                       ) : (
                         <span className="text-slate-400 font-mono text-[11px]">0</span>
                       )}
+                    </td>
+                    <td className="py-3 text-right">
+                      <Link
+                        to={`/suppliers?region=${encodeURIComponent(r.region)}`}
+                        className="text-xs font-mono text-[#3DD6C4] hover:underline"
+                      >
+                        View {r.supplier_count} Nodes →
+                      </Link>
                     </td>
                   </tr>
                 ))}
@@ -392,14 +529,17 @@ export const DashboardPage: React.FC = () => {
 
         {/* Event Type Breakdown */}
         <div className="bg-[#111A2E]/80 border border-[#1E2C48] rounded-xl p-5">
-          <h3 className="text-sm font-semibold text-white mb-1">Signal Types (14 Days)</h3>
+          <div className="flex items-center justify-between mb-1">
+            <h3 className="text-sm font-semibold text-white">Signal Types (14 Days)</h3>
+            <span className="text-xs font-mono text-slate-400">{overview?.recent_event_count ?? 0} Total</span>
+          </div>
           <p className="text-xs text-slate-400 mb-4">Classified external disruption events</p>
 
           <div className="space-y-3">
             {eventDist.map((item) => (
               <div key={item.event_type} className="space-y-1">
                 <div className="flex justify-between text-xs font-mono">
-                  <span className="text-slate-300 capitalize">{item.event_type.replace('_', ' ')}</span>
+                  <span className="text-slate-300 capitalize">{item.event_type.replace(/_/g, ' ')}</span>
                   <span className="text-slate-400">
                     {item.count} ({item.percentage.toFixed(0)}%)
                   </span>
@@ -436,34 +576,74 @@ export const DashboardPage: React.FC = () => {
           {recentEvents.length > 0 ? (
             recentEvents.slice(0, 5).map((evt) => (
               <div key={evt.id} className="py-3.5 flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="space-y-1">
+                <div className="space-y-1.5 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase bg-[#18253E] text-slate-300 px-2 py-0.5 rounded border border-[#233352]">
-                      {evt.event_type}
+                    <span className="text-[10px] font-mono uppercase bg-[#18253E] text-slate-200 px-2 py-0.5 rounded border border-[#233352] font-semibold">
+                      {evt.event_type.replace(/_/g, ' ')}
                     </span>
                     <span className="text-xs text-slate-400 font-mono">
-                      {new Date(evt.detected_at).toLocaleDateString()}
+                      {new Date(evt.detected_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">• {evt.region}</span>
+                    <span className="text-xs text-slate-400">
+                      • Corridor:{' '}
+                      <Link
+                        to={`/risk-events?region=${encodeURIComponent(evt.region)}`}
+                        className="text-slate-300 hover:text-[#3DD6C4] font-medium underline underline-offset-2"
+                      >
+                        {evt.region}
+                      </Link>
+                    </span>
                     <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded">
                       {evt.source}
                     </span>
                   </div>
-                  <h4 className="text-sm font-medium text-slate-200 line-clamp-1">{evt.headline}</h4>
+
+                  <h4 className="text-sm font-medium text-slate-200 line-clamp-1">
+                    {evt.headline}
+                  </h4>
+
                   {evt.affected_suppliers && evt.affected_suppliers.length > 0 && (
-                    <p className="text-xs text-slate-400">
-                      Corridor nodes: <span className="text-slate-300">{evt.affected_suppliers.slice(0, 3).join(', ')}{evt.affected_suppliers.length > 3 ? ` +${evt.affected_suppliers.length - 3} more` : ''}</span>
-                    </p>
+                    <div className="text-xs text-slate-400 flex flex-wrap items-center gap-1.5">
+                      <span>Corridor nodes:</span>
+                      {evt.affected_suppliers.slice(0, 3).map((suppName) => (
+                        <Link
+                          key={suppName}
+                          to={`/suppliers?search=${encodeURIComponent(suppName)}`}
+                          className="text-[#3DD6C4] hover:underline bg-[#0E1626] px-1.5 py-0.5 rounded text-[11px] font-mono border border-[#1E2C48]"
+                        >
+                          {suppName}
+                        </Link>
+                      ))}
+                      {evt.affected_suppliers.length > 3 && (
+                        <span className="text-slate-500 text-[11px]">
+                          +{evt.affected_suppliers.length - 3} more
+                        </span>
+                      )}
+                    </div>
                   )}
                 </div>
 
-                {typeof evt.severity === 'number' && (
-                  <div className="text-right shrink-0">
-                    <span className="text-xs font-mono font-semibold text-amber-400">
-                      Sev {evt.severity.toFixed(0)}
-                    </span>
-                  </div>
-                )}
+                <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-1.5 shrink-0 bg-[#0E1626] border border-[#1E2C48] px-3 py-2 rounded-lg text-right font-mono min-w-[100px]">
+                  {typeof evt.severity === 'number' && (
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase block">Severity</span>
+                      <span
+                        className="text-xs font-bold"
+                        style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
+                      >
+                        {evt.severity.toFixed(1)}/100
+                      </span>
+                    </div>
+                  )}
+                  {typeof evt.confidence === 'number' && (
+                    <div>
+                      <span className="text-[10px] text-slate-500 uppercase block">Confidence</span>
+                      <span className="text-[11px] text-slate-300">
+                        {(evt.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             ))
           ) : (
