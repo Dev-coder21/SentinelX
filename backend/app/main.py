@@ -9,6 +9,7 @@ from app.api.suppliers import router as suppliers_router
 from app.api.network import router as network_router
 from app.api.risk_events import router as risk_events_router
 from app.api.dashboard import router as dashboard_router
+from app.api.optimization import router as optimization_router
 
 
 @asynccontextmanager
@@ -40,19 +41,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Root-level endpoints (/health, /suppliers, /network, /risk-events, /dashboard)
+# Root-level endpoints (/health, /suppliers, /network, /risk-events, /dashboard, /prioritize)
 app.include_router(health_router)
 app.include_router(suppliers_router)
 app.include_router(network_router)
 app.include_router(risk_events_router)
 app.include_router(dashboard_router)
+app.include_router(optimization_router)
 
-# Versioned API endpoints (/api/v1/health, /api/v1/suppliers, /api/v1/network, /api/v1/risk-events, /api/v1/dashboard)
+# Versioned API endpoints (/api/v1/health, /api/v1/suppliers, /api/v1/network, /api/v1/risk-events, /api/v1/dashboard, /api/v1/prioritize)
 app.include_router(health_router, prefix=settings.API_V1_STR)
 app.include_router(suppliers_router, prefix=settings.API_V1_STR)
 app.include_router(network_router, prefix=settings.API_V1_STR)
 app.include_router(risk_events_router, prefix=settings.API_V1_STR)
 app.include_router(dashboard_router, prefix=settings.API_V1_STR)
+app.include_router(optimization_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/", tags=["Root"])
@@ -66,6 +69,8 @@ def root():
         "network": "/network",
         "risk_events": "/risk-events",
         "dashboard_summary": "/dashboard/summary",
+        "prioritize": "/prioritize",
+        "latest_mitigation_plan": "/mitigation-plans/latest",
     }
 
 

@@ -10,6 +10,11 @@ from app.schemas.mitigation_plan import (
     MitigationPlanRead,
 )
 from app.schemas.network import NetworkNode, NetworkEdge, NetworkGraphResponse
+from app.schemas.optimization import (
+    PrioritizeRequest,
+    PrioritizeResponse,
+    SelectedSupplierMitigation,
+)
 
 __all__ = [
     "HealthResponse",
@@ -33,4 +38,7 @@ __all__ = [
     "NetworkNode",
     "NetworkEdge",
     "NetworkGraphResponse",
+    "PrioritizeRequest",
+    "PrioritizeResponse",
+    "SelectedSupplierMitigation",
 ]

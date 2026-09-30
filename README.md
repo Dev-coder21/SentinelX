@@ -239,6 +239,57 @@ SentinelX utilizes **APScheduler** (`BackgroundScheduler`) embedded within FastA
 
 ---
 
+## 🎯 Constrained Optimization & Mitigation Prioritization (Phase 6)
+
+SentinelX formulates supply chain risk mitigation as a **0-1 Knapsack Binary Integer Linear Program** solved via **PuLP (CBC solver)**:
+
+> *"Given a limited capital mitigation budget $B$, which at-risk suppliers should be prioritized for action to maximize expected protected business revenue?"*
+
+### 1. Mathematical Formulation
+
+#### Decision Variables
+For each eligible candidate supplier $i \in \{1, \dots, N\}$:
+$$x_i \in \{0, 1\}$$
+where $x_i = 1$ denotes selecting supplier $i$ for capital risk mitigation (e.g. qualifying secondary tooling, reserving dual-source buffer wafer stock, or chartering dedicated expedited air freight).
+
+#### Objective Function
+Maximize total expected protected revenue across the manufacturing network:
+$$\text{Maximize } Z = \sum_{i=1}^{N} \text{ProtectedRevenue}_i \cdot x_i$$
+
+#### Budget Constraint
+The total expenditure across selected mitigations cannot exceed the allocated budget $B$:
+$$\sum_{i=1}^{N} \text{Cost}_i \cdot x_i \le B$$
+
+### 2. Economic Factor Derivations
+
+The optimization model deterministically evaluates four core economic parameters for each supplier:
+
+1. **Dependency Impact Factor ($\text{Impact}_i$)**:
+   $$\text{Impact}_i = \max\left(1.0, \sum_{d \in D_i} \text{weight}_d\right)$$
+   Measures downstream operational breadth based on the number and critical weights of product lines (e.g. Flagship Smartphone, Wearables) that rely on supplier $i$.
+
+2. **Gross Risk Financial Exposure ($\text{Exposure}_i$)**:
+   $$\text{Exposure}_i = \left(\frac{\text{RiskScore}_i}{100.0}\right) \times \text{Impact}_i \times \text{AnnualSpend}_i$$
+   Combines live normalized risk ($0-100$), multi-product dependency leverage, and procurement spend.
+
+3. **Expected Protected Revenue ($\text{ProtectedRevenue}_i$)**:
+   $$\text{ProtectedRevenue}_i = \text{Exposure}_i \times \text{Effectiveness}_i$$
+   Where $\text{Effectiveness}_i \in [0.75, 0.85]$ is the deterministic risk reduction achieved through technical mitigation (e.g. 75% for custom silicon, 85% for standard passives).
+
+4. **Mitigation Cost ($\text{Cost}_i$)**:
+   $$\text{Cost}_i = \text{BaseCost}(\text{Tier}_i) + \text{Rate}(\text{Tier}_i) \times \text{AnnualSpend}_i$$
+   - **Tier 1**: $\$75,000 + 4\%$ annual spend (complex ASICs, masks, foundry reservation)
+   - **Tier 2**: $\$40,000 + 3\%$ annual spend (sensors, displays, batteries)
+   - **Tier 3**: $\$20,000 + 2\%$ annual spend (standard passives, packaging)
+
+### 3. Explainable Rationale & Auditability
+Every selected supplier output includes an explicit, deterministic justification citing exact metrics and ROI efficiency multiple ($\text{Efficiency} = \frac{\text{ProtectedRevenue}}{\text{Cost}}$):
+> *"Prioritized due to critical evaluated risk (85.0/100) and Tier 1 standing across 3.0x dependency impact, protecting an estimated $7,458,750 in exposed revenue for $335,000 cost (22.3x efficiency ROI)."*
+
+Every optimization run is persisted to `mitigation_plans` with full budget utilization, remaining capital, and auditable metadata, retrievable via `GET /mitigation-plans/latest`.
+
+---
+
 ## 📍 Current Development Status
 
 - [x] **Phase 1: Foundation & Architecture (COMPLETE)**
@@ -266,9 +317,13 @@ SentinelX utilizes **APScheduler** (`BackgroundScheduler`) embedded within FastA
   - Configurable APScheduler lifecycle integrated via FastAPI lifespan.
   - Snapshot persistence preserving historical risk trajectories without duplicate events.
   - High-performance `GET /dashboard/summary` endpoint for executive KPI cards.
-  - 59 comprehensive backend tests passing.
-- [ ] **Phase 6: LP Resource Allocation & Knapsack Prioritization (Next)**
-  - Linear programming mitigation optimization using PuLP.
-- [ ] **Phase 7: Frontend Command Center & Force-Directed Graph**
-  - Interactive visualization, risk radar, and mitigation simulator.
+- [x] **Phase 6: Constrained Optimization & Mitigation Prioritization (COMPLETE)**
+  - 0-1 Knapsack binary linear programming engine using PuLP (CBC solver).
+  - Deterministic derivation of mitigation costs, risk exposure, and expected protected revenue.
+  - Human-readable ROI rationale generated for every prioritized supplier.
+  - Endpoints `POST /prioritize` and `GET /mitigation-plans/latest` with full audit persistence.
+  - 74 comprehensive backend tests passing.
+- [ ] **Phase 7: Frontend Command Center & Force-Directed Graph (Next)**
+  - Interactive visualization, risk radar, animated budget bar, and mitigation simulator.
+
 

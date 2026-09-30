@@ -21,7 +21,14 @@ class MitigationPlan(Base):
         nullable=False,
     )
     expected_revenue_protected = Column(Float, nullable=False)
+    total_budget_used = Column(Float, nullable=True, default=0.0)
+    remaining_budget = Column(Float, nullable=True, default=0.0)
+    objective_value = Column(Float, nullable=True, default=0.0)
     optimization_notes = Column(Text, nullable=True)
+    optimization_metadata = Column(
+        JSON().with_variant(JSONB, "postgresql"),
+        nullable=True,
+    )
 
     def __repr__(self) -> str:
         return f"<MitigationPlan(budget={self.budget_constraint}, protected={self.expected_revenue_protected})>"
