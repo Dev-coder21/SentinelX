@@ -1,0 +1,12 @@
+case_id,case_name,affected_region,supplier_tier,supplier_name,criticality_multiplier,baseline_risk,onset_risk,peak_risk,post_event_risk,decay_check_risk,risk_delta,peak_recency_weight,post_event_recency_weight,multi_signal_count
+case_red_sea_2024,2024 Red Sea Maritime Chokepoint & Conflict Crisis,Europe,1,Eindhoven Litho Circuits,1.3,0.0,100.0,76.3,32.2,19.6,76.3,0.4085,0.1517,2
+case_red_sea_2024,2024 Red Sea Maritime Chokepoint & Conflict Crisis,Europe,2,Bavaria Sensor Dynamics,1.1,0.0,89.1,64.6,27.2,16.6,64.6,0.4085,0.1517,2
+case_red_sea_2024,2024 Red Sea Maritime Chokepoint & Conflict Crisis,Europe,3,Nordic Green Packaging,0.9,0.0,72.9,52.8,22.3,13.6,52.8,0.4085,0.1517,2
+case_suez_2021,2021 Suez Canal Obstruction (Ever Given Grounding),Europe,1,Eindhoven Litho Circuits,1.3,0.0,100.0,92.2,41.7,20.9,92.2,0.8153,0.3692,1
+case_suez_2021,2021 Suez Canal Obstruction (Ever Given Grounding),Europe,2,Bavaria Sensor Dynamics,1.1,0.0,95.1,78.0,35.3,17.7,78.0,0.8153,0.3692,1
+case_suez_2021,2021 Suez Canal Obstruction (Ever Given Grounding),Europe,3,Nordic Green Packaging,0.9,0.0,77.8,63.8,28.9,14.4,63.8,0.8153,0.3692,1
+case_typhoon_gaemi_2024,2024 Typhoon Gaemi (Carina) Extreme Weather Disruption,East Asia,1,Pacific Silicon Foundry,1.3,0.0,0.0,100.0,52.8,26.4,100.0,0.9918,0.4778,1
+case_typhoon_gaemi_2024,2024 Typhoon Gaemi (Carina) Extreme Weather Disruption,East Asia,3,Tokyo Nano-Capacitors,0.9,0.0,0.0,75.9,36.6,18.3,75.9,0.9918,0.4778,1
+case_us_ila_strike_2024,2024 US East & Gulf Coast ILA Dockworkers Port Strike,North America,1,Silicon Valley RF Labs,1.3,0.0,100.0,100.0,73.1,40.3,100.0,0.8983,0.4274,2
+case_us_ila_strike_2024,2024 US East & Gulf Coast ILA Dockworkers Port Strike,North America,2,Austin Power Systems,1.1,0.0,88.0,100.0,61.8,34.1,100.0,0.8983,0.4274,2
+case_us_ila_strike_2024,2024 US East & Gulf Coast ILA Dockworkers Port Strike,North America,3,Monterrey Polymer Enclosures,0.9,0.0,72.0,82.5,50.6,27.9,82.5,0.8983,0.4274,2

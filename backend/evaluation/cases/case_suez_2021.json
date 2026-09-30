@@ -1,0 +1,35 @@
+{
+  "case_id": "case_suez_2021",
+  "name": "2021 Suez Canal Obstruction (Ever Given Grounding)",
+  "event_type": "logistics",
+  "affected_region": "Europe",
+  "affected_country": "Egypt / European Terminals",
+  "start_date": "2021-03-23T07:40:00Z",
+  "end_date": "2021-03-29T15:00:00Z",
+  "severity_rationale": "Ultra-large container ship Ever Given ran aground and completely obstructed the Suez Canal for 6 days, halting approximately $9.6 billion per day of maritime freight between Asia and Europe (~12% of global trade). European ports (Rotterdam, Antwerp, Hamburg) faced container dwell spikes and berth congestion for weeks.",
+  "source_org": "Lloyd's List Intelligence / Suez Canal Authority / BBC News",
+  "source_urls": [
+    "https://www.lloydslist.com/LL1136224/Suez-grounding-impact-on-global-container-shipping",
+    "https://www.bbc.com/news/world-middle-east-56505413"
+  ],
+  "notes_on_facts": "Canal was physically obstructed from March 23 to March 29, 2021. 422 vessels were stranded in queue. Port congestion across Northern European container hubs peaked 10 to 14 days after refloating.",
+  "events": [
+    {
+      "headline": "Container ship Ever Given runs aground, blocking all Suez Canal maritime transit",
+      "summary": "The 20,000 TEU Ever Given container vessel has grounded diagonally across the southern single-lane section of the Suez Canal, completely halting northbound and southbound convoys between Europe and Asia.",
+      "region": "Europe",
+      "source": "news",
+      "event_type": "logistics",
+      "sentiment_score": -0.85,
+      "severity": 88.0,
+      "detected_at": "2021-03-23T09:00:00Z"
+    }
+  ],
+  "windows": {
+    "baseline": "2021-03-10T12:00:00Z",
+    "onset": "2021-03-23T12:00:00Z",
+    "peak": "2021-03-27T12:00:00Z",
+    "post_event": "2021-04-12T12:00:00Z",
+    "decay_check": "2021-04-26T12:00:00Z"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "case_id": "case_us_ila_strike_2024",
+  "name": "2024 US East & Gulf Coast ILA Dockworkers Port Strike",
+  "event_type": "labor",
+  "affected_region": "North America",
+  "affected_country": "United States",
+  "start_date": "2024-10-01T04:01:00Z",
+  "end_date": "2024-10-04T00:00:00Z",
+  "severity_rationale": "45,000 dockworkers represented by the International Longshoremen's Association (ILA) struck across 36 container ports along the US Atlantic and Gulf Coasts, halting approximately 50% of total US maritime ocean import/export trade. Shippers faced immediate component delays and ocean carriers implemented emergency congestion surcharges of $1,000 to $3,000 per container.",
+  "source_org": "United States Maritime Alliance (USMX) / ILA / CNBC Supply Chain",
+  "source_urls": [
+    "https://www.cnbc.com/2024/10/01/port-strike-begins-us-east-and-gulf-coasts-shut-down.html",
+    "https://www.reuters.com/world/us/us-dockworkers-strike-halting-half-nations-ocean-shipping-2024-10-01/"
+  ],
+  "notes_on_facts": "First coastwide ILA strike since 1977 commenced Oct 1, 2024. A tentative wage agreement suspended the strike late Oct 3, but anchor queues of dozens of container vessels required 2 to 3 weeks to clear backlogged import cargo.",
+  "events": [
+    {
+      "headline": "Dockworkers strike shuts 36 ports along US East and Gulf Coasts from Maine to Texas",
+      "summary": "Master contract expiration triggers full labor walkout across 14 major port authorities, halting container gantry cranes and roll-on/roll-off automotive terminals.",
+      "region": "North America",
+      "source": "news",
+      "event_type": "labor",
+      "sentiment_score": -0.82,
+      "severity": 80.0,
+      "detected_at": "2024-10-01T08:00:00Z"
+    },
+    {
+      "headline": "Vessel anchor queues expand off Savannah and New York, threatening manufacturing component shortages",
+      "summary": "Marine terminals report growing queues of container vessels at anchor outside East Coast ports, with logistics operators warning of inventory dwell and electronic component delivery delays.",
+      "region": "North America",
+      "source": "news",
+      "event_type": "supply_shortage",
+      "sentiment_score": -0.70,
+      "severity": 74.0,
+      "detected_at": "2024-10-02T16:00:00Z"
+    }
+  ],
+  "windows": {
+    "baseline": "2024-09-15T12:00:00Z",
+    "onset": "2024-10-01T12:00:00Z",
+    "peak": "2024-10-03T12:00:00Z",
+    "post_event": "2024-10-18T12:00:00Z",
+    "decay_check": "2024-11-01T12:00:00Z"
+  }
+}

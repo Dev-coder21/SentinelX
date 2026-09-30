@@ -1,0 +1,35 @@
+{
+  "case_id": "case_typhoon_gaemi_2024",
+  "name": "2024 Typhoon Gaemi (Carina) Extreme Weather Disruption",
+  "event_type": "weather",
+  "affected_region": "East Asia",
+  "affected_country": "Taiwan / Philippines",
+  "start_date": "2024-07-22T00:00:00Z",
+  "end_date": "2024-07-26T23:59:00Z",
+  "severity_rationale": "Category 4 equivalent super typhoon with sustained winds over 115 mph (gusts >140 mph) and over 1,000 mm of torrential rainfall in mountainous Taiwan. Financial markets, government offices, international flights, and seaport operations at Kaohsiung and Keelung were shut down for two consecutive days. Science parks operated on emergency protocols.",
+  "source_org": "Central Weather Administration (Taiwan) / JTWC / Bloomberg Markets",
+  "source_urls": [
+    "https://www.cwa.gov.tw/V8/E/",
+    "https://www.bloomberg.com/news/articles/2024-07-24/typhoon-gaemi-shuts-taiwan-financial-markets-cancels-flights"
+  ],
+  "notes_on_facts": "Nationwide disaster response declared July 24-25, 2024. Container ports suspended crane operations, coastal cargo vessels sheltered, and semiconductor fabs operated with essential personnel only.",
+  "events": [
+    {
+      "headline": "Super Typhoon Gaemi makes landfall in Taiwan with torrential rains and 140 mph wind gusts",
+      "summary": "Severe tropical cyclone Gaemi lashes northern and eastern Taiwan, triggering widespread flooding, power disruptions, and mandatory closure of ports, financial institutions, and manufacturing operations.",
+      "region": "East Asia",
+      "source": "weather",
+      "event_type": "weather",
+      "sentiment_score": 0.0,
+      "severity": 85.0,
+      "detected_at": "2024-07-24T14:00:00Z"
+    }
+  ],
+  "windows": {
+    "baseline": "2024-07-10T12:00:00Z",
+    "onset": "2024-07-22T12:00:00Z",
+    "peak": "2024-07-24T18:00:00Z",
+    "post_event": "2024-08-08T12:00:00Z",
+    "decay_check": "2024-08-22T12:00:00Z"
+  }
+}

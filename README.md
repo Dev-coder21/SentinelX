@@ -383,7 +383,50 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Prioritization Workspace: Real-time PuLP solver execution states, 220ms budget utilization progress bar, animated protected revenue currency counter, and top priority visual emphasis.
   - Global accessible reduced-motion reset in `index.css` neutralizing CSS animations and transitions for users requesting reduced motion.
   - Zero mock data; 100% real API integration, 0 oxlint warnings, clean Vite production build, and 86/86 backend pytest passing.
-- [ ] **Phase 14: Production UX & Accessibility Audit (Next)**
+- [x] **Phase 14: Production UX, Accessibility & Responsive Audit (COMPLETE)**
   - Comprehensive accessibility compliance (WCAG 2.1 AA), keyboard navigation flow, ARIA attributes, color contrast verification, and responsive UX hardening.
+- [x] **Phase 15: Backend Production Hardening (COMPLETE)**
+  - Production input validation (pagination bounds, max offsets, string lengths, finite non-negative budget ceiling).
+  - Database hardening: explicit `db.rollback()` on transaction failure, intra-batch and database deduplication, no N+1 query patterns.
+  - Centralized safe error handling returning generic 500 error messages without leaking tracebacks, SQL statements, or credentials.
+  - Scheduler concurrency safety via non-blocking `_refresh_lock` mutex and safe interval validation.
+  - Mathematical boundary safeguards ensuring 0–100 risk score bounds, immunity against NaN/Inf, and clean knapsack solver execution.
+- [x] **Phase 16: Historical Backtest & Risk Validation (COMPLETE)**
+  - Offline, reproducible retrospective historical validation across 4 documented global supply chain disruption cases (Suez Canal 2021, Red Sea 2024, Typhoon Gaemi 2024, US ILA Port Strike 2024).
+  - Validated risk sensitivity, multi-signal diminishing returns, Tier 1/2/3 criticality amplification, and 14-day exponential recency decay.
+  - Full automated evaluation test suite in `backend/tests/test_evaluation.py` (101/101 backend tests passing).
+  - Detailed findings documented in [`docs/HISTORICAL_VALIDATION.md`](docs/HISTORICAL_VALIDATION.md).
+
+---
+
+## 📊 Historical Backtest & Risk Validation
+
+SentinelX includes a fully reproducible, offline historical validation suite that evaluates how the production risk engine behaves when supplied with documented historical supply chain disruptions.
+
+### Evaluation Command
+To execute the historical evaluation suite and regenerate all machine-readable artifacts:
+
+```bash
+cd backend
+./venv/bin/python -m app.evaluation.backtest
+```
+
+### Documented Historical Cases
+The evaluation suite contains 4 verified historical case fixtures in [`backend/evaluation/cases/`](backend/evaluation/cases/):
+1. **2021 Suez Canal Obstruction (*Ever Given*)**: Logistics maritime chokepoint shutdown halting ~12% of global trade.
+2. **2024 Red Sea Conflict Crisis**: Multi-signal geopolitical attack and logistics Cape rerouting delays.
+3. **2024 Typhoon Gaemi**: Category 4 super typhoon with 140+ mph wind gusts affecting Taiwan ports and manufacturing.
+4. **2024 US East & Gulf Coast ILA Port Strike**: Multi-signal labor walkout and supply shortage across 36 container ports.
+
+### Generated Artifacts
+- **Detailed Machine-Readable JSON**: [`backend/evaluation/results/historical_validation_results.json`](backend/evaluation/results/historical_validation_results.json)
+- **Summary Machine-Readable CSV**: [`backend/evaluation/results/historical_validation_summary.csv`](backend/evaluation/results/historical_validation_summary.csv)
+- **Comprehensive Report**: [`docs/HISTORICAL_VALIDATION.md`](docs/HISTORICAL_VALIDATION.md)
+
+### Explicit Methodological Scope & Limitations
+- **Retrospective Sensitivity, Not Prediction**: This evaluation tests whether SentinelX's existing mathematical pipeline responds coherently when real-world disruption signals occur. It does **not** claim predictive or forecasting accuracy.
+- **Geographic Granularity**: Signals are associated by broad continental corridors (`Europe`, `East Asia`, `Southeast Asia`, `North America`); local events elevate regional supplier scores unless country- or facility-level resolution is modeled.
+- **Offline Fixtures**: While production runs on continuous live external APIs (GDELT 2.0, Open-Meteo), historical evaluation relies on documented fixtures for offline reproducibility.
+
 
 
