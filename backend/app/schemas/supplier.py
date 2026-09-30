@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -23,6 +23,7 @@ class SupplierCreate(SupplierBase):
 class SupplierRead(SupplierBase):
     id: UUID
     current_risk_score: Optional[float] = Field(default=None, description="Latest risk score 0-100 if available")
+    risk_level: Optional[str] = Field(default=None, description="Risk classification: 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'")
     dependency_count: Optional[int] = Field(default=0, description="Total product lines dependent on this supplier")
     product_lines: Optional[List[str]] = Field(default_factory=list, description="Unique product lines supplied")
 
@@ -32,9 +33,13 @@ class SupplierRead(SupplierBase):
 class SupplierDetail(SupplierBase):
     id: UUID
     current_risk_score: Optional[float] = Field(default=None, description="Latest risk score 0-100 if available")
+    previous_risk_score: Optional[float] = Field(default=None, description="Previous evaluation score")
+    risk_trend: Optional[str] = Field(default=None, description="'increasing', 'decreasing', 'stable'")
+    risk_level: Optional[str] = Field(default=None, description="Risk classification: 'LOW', 'MEDIUM', 'HIGH', 'CRITICAL'")
+    contributing_factors: Optional[Dict[str, Any]] = Field(default=None, description="Explainable factor breakdown")
     dependencies: List[DependencyRead] = Field(default_factory=list, description="Product dependency links")
     product_lines_affected: List[str] = Field(default_factory=list, description="List of company product lines affected")
-    risk_history: List[RiskScoreRead] = Field(default_factory=list, description="Historical risk scores")
-    related_risk_events: List[RiskEventRead] = Field(default_factory=list, description="Recent risk events for supplier region")
+    risk_history: List[RiskScoreRead] = Field(default_factory=list, description="Historical timestamped scores")
+    related_risk_events: List[RiskEventRead] = Field(default_factory=list, description="Recent risk events in supplier region")
 
     model_config = ConfigDict(from_attributes=True)

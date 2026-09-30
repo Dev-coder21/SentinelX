@@ -13,6 +13,9 @@ class RiskEventBase(BaseModel):
     event_type: str = Field(..., max_length=100)
     raw_url: Optional[str] = Field(default=None, max_length=1000)
     fingerprint: Optional[str] = Field(default=None, max_length=64)
+    severity: Optional[float] = Field(default=None, ge=0.0, le=100.0)
+    confidence: Optional[float] = Field(default=None, ge=0.0, le=1.0)
+    classification_source: Optional[str] = Field(default=None, max_length=50)
 
 
 class RiskEventCreate(RiskEventBase):
