@@ -113,8 +113,13 @@ class NLPRiskPipeline:
                 fallback_count += 1
                 analyzed_count += 1
 
-        self.db.commit()
-        return analyzed_count, gemini_count, fallback_count
+        try:
+            self.db.commit()
+            return analyzed_count, gemini_count, fallback_count
+        except Exception as commit_exc:
+            self.db.rollback()
+            logger.error(f"Failed to commit classified events: {commit_exc}")
+            raise commit_exc
 
     def calculate_supplier_risks(
         self,
@@ -140,8 +145,13 @@ class NLPRiskPipeline:
             self.db.add(score_record)
             created_scores.append(score_record)
 
-        self.db.commit()
-        return created_scores
+        try:
+            self.db.commit()
+            return created_scores
+        except Exception as commit_exc:
+            self.db.rollback()
+            logger.error(f"Failed to commit supplier risk scores: {commit_exc}")
+            raise commit_exc
 
     def run(self, current_time: Optional[datetime] = None) -> PipelineRunSummary:
         """Executes full pipeline: event classification -> supplier risk fusion -> persistence."""

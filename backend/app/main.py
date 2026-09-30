@@ -1,5 +1,7 @@
+import logging
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
@@ -10,6 +12,8 @@ from app.api.network import router as network_router
 from app.api.risk_events import router as risk_events_router
 from app.api.dashboard import router as dashboard_router
 from app.api.optimization import router as optimization_router
+
+logger = logging.getLogger("sentinelx.api")
 
 
 @asynccontextmanager
@@ -40,6 +44,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.error(f"Unhandled exception on {request.method} {request.url.path}: {exc}", exc_info=True)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "An internal server error occurred. The incident has been logged."},
+    )
+
 
 # Root-level endpoints (/health, /suppliers, /network, /risk-events, /dashboard, /prioritize)
 app.include_router(health_router)

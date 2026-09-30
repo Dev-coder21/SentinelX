@@ -24,9 +24,13 @@ def get_db() -> Generator[Session, None, None]:
     """
     FastAPI dependency that yields a SQLAlchemy database session
     and ensures it is cleanly closed after request completion.
+    Rolls back any uncommitted transaction on exception.
     """
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()

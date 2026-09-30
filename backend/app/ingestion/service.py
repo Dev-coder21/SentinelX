@@ -88,6 +88,9 @@ class IngestionService:
             regions_queried=target_regions,
         )
 
+        seen_fingerprints: set = set()
+        seen_ids: set = set()
+
         for region in target_regions:
             for provider in self.providers:
                 try:
@@ -99,31 +102,39 @@ class IngestionService:
                     )
 
                     for evt in events:
-                        # Check database deduplication by unique fingerprint or ID
+                        # Check intra-batch and database deduplication by unique fingerprint or ID
                         is_duplicate = False
+
                         if evt.fingerprint:
-                            existing = (
-                                self.db.query(RiskEvent)
-                                .filter(RiskEvent.fingerprint == evt.fingerprint)
-                                .first()
-                            )
-                            if existing is not None:
+                            if evt.fingerprint in seen_fingerprints:
                                 is_duplicate = True
+                            else:
+                                existing = (
+                                    self.db.query(RiskEvent)
+                                    .filter(RiskEvent.fingerprint == evt.fingerprint)
+                                    .first()
+                                )
+                                if existing is not None:
+                                    is_duplicate = True
 
                         if not is_duplicate and evt.id:
-                            existing_id = (
-                                self.db.query(RiskEvent)
-                                .filter(RiskEvent.id == evt.id)
-                                .first()
-                            )
-                            if existing_id is not None:
+                            if evt.id in seen_ids:
                                 is_duplicate = True
+                            else:
+                                existing_id = (
+                                    self.db.query(RiskEvent)
+                                    .filter(RiskEvent.id == evt.id)
+                                    .first()
+                                )
+                                if existing_id is not None:
+                                    is_duplicate = True
 
                         if is_duplicate:
                             summary.duplicates_skipped += 1
                         else:
+                            evt_id = evt.id or uuid.uuid4()
                             db_event = RiskEvent(
-                                id=evt.id or uuid.uuid4(),
+                                id=evt_id,
                                 region=evt.region,
                                 source=evt.source,
                                 headline=evt.headline,
@@ -135,6 +146,9 @@ class IngestionService:
                                 fingerprint=evt.fingerprint,
                             )
                             self.db.add(db_event)
+                            if evt.fingerprint:
+                                seen_fingerprints.add(evt.fingerprint)
+                            seen_ids.add(evt_id)
                             summary.events_inserted += 1
 
                 except Exception as exc:

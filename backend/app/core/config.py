@@ -1,4 +1,5 @@
-from typing import List
+from typing import Any, List, Union
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,6 +30,28 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            if v.startswith("[") and v.endswith("]"):
+                import json
+                try:
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        elif isinstance(v, (list, tuple)):
+            return [str(origin).strip() for origin in v if str(origin).strip()]
+        return v
+
+    @field_validator("RISK_REFRESH_INTERVAL_MINUTES")
+    @classmethod
+    def validate_refresh_interval(cls, v: int) -> int:
+        if v < 1:
+            raise ValueError("RISK_REFRESH_INTERVAL_MINUTES must be >= 1 minute")
+        return v
 
     model_config = SettingsConfigDict(
         env_file=".env",

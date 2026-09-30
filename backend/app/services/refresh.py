@@ -1,4 +1,5 @@
 import logging
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import List, Optional
@@ -9,6 +10,7 @@ from app.ingestion.service import IngestionService
 from app.nlp.pipeline import NLPRiskPipeline
 
 logger = logging.getLogger("sentinelx.services.refresh")
+_refresh_lock = threading.Lock()
 
 
 @dataclass
@@ -59,6 +61,11 @@ def refresh_risk_pipeline(
     Ensures failure isolation: external provider errors (GDELT, Open-Meteo, Gemini)
     do not crash the pipeline or corrupt database state.
     """
+    acquired = _refresh_lock.acquire(blocking=False)
+    if not acquired:
+        logger.warning("Could not acquire refresh lock: previous pipeline run still active.")
+        return RefreshResult(success=False, failure_details=["Concurrent refresh in progress"])
+
     now = current_time or datetime.now(timezone.utc)
     owns_session = False
     session = db
@@ -141,5 +148,6 @@ def refresh_risk_pipeline(
         raise exc
 
     finally:
+        _refresh_lock.release()
         if owns_session:
             session.close()

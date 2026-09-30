@@ -27,7 +27,7 @@ def determine_risk_level(score: Optional[float]) -> Optional[str]:
 @router.get("", response_model=List[SupplierRead])
 def list_suppliers(
     limit: int = Query(default=50, ge=1, le=200, description="Maximum number of suppliers to return"),
-    offset: int = Query(default=0, ge=0, description="Offset for pagination"),
+    offset: int = Query(default=0, ge=0, le=10000, description="Offset for pagination"),
     db: Session = Depends(get_db),
 ) -> List[SupplierRead]:
     """

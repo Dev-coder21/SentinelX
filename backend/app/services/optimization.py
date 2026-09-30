@@ -1,4 +1,5 @@
 import logging
+import math
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from uuid import UUID
@@ -136,7 +137,17 @@ class MitigationOptimizerService:
 
         candidates = []
         for supp in suppliers:
-            risk_score = risk_by_supplier.get(supp.id, 0.0)
+            raw_risk = risk_by_supplier.get(supp.id, 0.0)
+            if raw_risk is None or not isinstance(raw_risk, (int, float)) or math.isnan(raw_risk) or math.isinf(raw_risk):
+                risk_score = 0.0
+            else:
+                risk_score = max(0.0, min(100.0, float(raw_risk)))
+
+            raw_spend = supp.annual_spend
+            if raw_spend is None or not isinstance(raw_spend, (int, float)) or math.isnan(raw_spend) or math.isinf(raw_spend):
+                annual_spend = 0.0
+            else:
+                annual_spend = max(0.0, float(raw_spend))
 
             # 1. Dependency impact: sum of downstream product line dependency weights
             if supp.dependencies:
@@ -146,11 +157,11 @@ class MitigationOptimizerService:
             dep_impact = round(max(1.0, dep_impact), 2)
 
             # 2. Financial metrics
-            cost = derive_mitigation_cost(supp.criticality_tier, supp.annual_spend)
+            cost = derive_mitigation_cost(supp.criticality_tier, annual_spend)
             effectiveness = derive_mitigation_effectiveness(supp.category, supp.criticality_tier)
 
             # Risk exposure = (risk_score / 100) * dependency_impact * annual_spend
-            exposure = (risk_score / 100.0) * dep_impact * supp.annual_spend
+            exposure = (risk_score / 100.0) * dep_impact * annual_spend
             exposure = round(exposure, 2)
 
             # Protected revenue = exposure * effectiveness
@@ -164,7 +175,7 @@ class MitigationOptimizerService:
                 "supplier_name": supp.name,
                 "current_risk_score": risk_score,
                 "criticality_tier": supp.criticality_tier,
-                "annual_spend": supp.annual_spend,
+                "annual_spend": annual_spend,
                 "dependency_impact": dep_impact,
                 "mitigation_cost": cost,
                 "mitigation_effectiveness": effectiveness,
@@ -395,9 +406,13 @@ class MitigationOptimizerService:
             optimization_notes=f"Status: {plan_response.optimization_status} | Selected: {plan_response.selected_count}",
             optimization_metadata=plan_response.metadata,
         )
-        self.db.add(plan_entity)
-        self.db.commit()
-        self.db.refresh(plan_entity)
+        try:
+            self.db.add(plan_entity)
+            self.db.commit()
+            self.db.refresh(plan_entity)
+        except Exception:
+            self.db.rollback()
+            raise
 
         plan_response.plan_id = plan_entity.id
         return plan_entity

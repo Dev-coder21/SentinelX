@@ -26,11 +26,14 @@ class SupplierRiskEvaluation:
     contributing_factors: Dict[str, Any]
 
 
-def calculate_recency_weight(event_date: datetime, current_date: Optional[datetime] = None) -> float:
+def calculate_recency_weight(event_date: Optional[datetime], current_date: Optional[datetime] = None) -> float:
     """
     Computes an exponential decay weight in [0.1, 1.0] based on event age in days.
     Recent events carry full weight; older events decay with a 14-day half-life.
     """
+    if event_date is None:
+        return 0.50
+
     now = current_date or datetime.now(timezone.utc)
     # Ensure timezone awareness
     if event_date.tzinfo is None:
@@ -39,6 +42,8 @@ def calculate_recency_weight(event_date: datetime, current_date: Optional[dateti
         now = now.replace(tzinfo=timezone.utc)
 
     delta_days = max(0.0, (now - event_date).total_seconds() / 86400.0)
+    if math.isnan(delta_days) or math.isinf(delta_days):
+        return 0.50
     weight = math.exp(-RECENCY_DECAY_LAMBDA * delta_days)
     return max(0.10, min(1.0, weight))
 
@@ -48,14 +53,20 @@ def compute_event_risk_contribution(event: RiskEvent) -> float:
     Computes single-event base risk in [0, 100] blending classified severity and sentiment.
     """
     base_severity = event.severity if event.severity is not None else 50.0
+    if not isinstance(base_severity, (int, float)) or math.isnan(base_severity) or math.isinf(base_severity):
+        base_severity = 50.0
 
     if event.source == "weather":
-        return max(0.0, min(100.0, base_severity))
+        return max(0.0, min(100.0, float(base_severity)))
 
     # For news, negative sentiment amplifies disruption severity
     # sentiment_score is in [-1.0, +1.0]
-    sentiment_risk = max(0.0, -event.sentiment_score * 100.0)
-    blended = 0.65 * base_severity + 0.35 * sentiment_risk
+    sentiment_score = event.sentiment_score if event.sentiment_score is not None else 0.0
+    if not isinstance(sentiment_score, (int, float)) or math.isnan(sentiment_score) or math.isinf(sentiment_score):
+        sentiment_score = 0.0
+
+    sentiment_risk = max(0.0, -float(sentiment_score) * 100.0)
+    blended = 0.65 * float(base_severity) + 0.35 * sentiment_risk
     return max(0.0, min(100.0, blended))
 
 

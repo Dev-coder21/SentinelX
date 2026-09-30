@@ -8,7 +8,8 @@ class PrioritizeRequest(BaseModel):
     budget: float = Field(
         ...,
         ge=0.0,
-        description="Total capital budget allocated for risk mitigation actions in USD (must be >= 0)",
+        le=1_000_000_000.0,
+        description="Total capital budget allocated for risk mitigation actions in USD (must be between 0 and 1,000,000,000)",
         examples=[500000.0],
     )
 
