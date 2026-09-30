@@ -334,8 +334,17 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Strongly typed API interfaces matching all FastAPI backend models.
   - Complete operational views: Dashboard with Recharts telemetry (risk distribution, regional concentration, historical trend), Supplier Directory with search and corridor/tier filters, Supplier Detail with risk trajectory and explainable contributing factors, Risk Events Feed with corridor/source filtering, Network Page foundation, and Mitigation Prioritization workspace.
   - Zero mock data; connected directly to live backend endpoints.
-  - 100% clean type-check (`tsc -b`), lint (`oxlint` 0 warnings), and production build.
-- [ ] **Phase 9: Interactive Network Graph & Advanced Visualizations (Next)**
-  - Interactive force-directed canvas with particle flow, blast-radius simulation, and physics controls.
+- [x] **Phase 9: Signature Interactive Supplier Dependency Network (COMPLETE)**
+  - Responsive 2D force-directed canvas (`react-force-graph`) powered strictly by real `GET /network` topology (24 component suppliers + 4 product-line assembly hubs + 44 directed dependencies).
+  - Clear visual and geometric differentiation between product hubs (octagonal/square indigo nodes) and component suppliers (circular nodes sized by criticality tier and colored by deterministic risk bracket).
+  - Subtle active risk pulse on High ($\ge 70$) and Critical ($\ge 80$) suppliers respecting `prefers-reduced-motion`.
+  - Dependency edge thickness scaled deterministically by `dependency_weight` with directional orientation toward product sinks.
+  - $O(1)$ hover highlight isolating 1st-degree neighbor clusters and dimming unrelated topology.
+  - Contextual slide-out node inspection panel with direct navigation to deep-dive supplier telemetry.
+  - Compact multi-axis filtering (risk bracket, operating corridor, criticality tier, product hub toggle) and keyboard-accessible node selector.
+  - Camera control toolbar (Zoom In, Zoom Out, Zoom to Fit, Center Selected Node) and compact visual legend.
+  - Zero mock data; 100% clean TypeScript build and lint.
+- [ ] **Phase 10: Constrained Optimization & Mitigation Simulation Workspace (Next)**
+  - Full optimization experience, animated budget bar, protected revenue simulation, and comparative action planning.
 
 
