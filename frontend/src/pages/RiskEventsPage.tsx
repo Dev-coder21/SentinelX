@@ -17,12 +17,15 @@ import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
+import { motion } from 'framer-motion'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import type { RiskEvent } from '@/types/api'
 
 const PAGE_SIZE = 15
 
 export const RiskEventsPage: React.FC = () => {
+  const reducedMotion = usePrefersReducedMotion()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const initialRegion = searchParams.get('region') || 'all'
@@ -310,103 +313,112 @@ export const RiskEventsPage: React.FC = () => {
         />
       ) : (
         <div className="space-y-3">
-          {paginatedEvents.map((evt: RiskEvent) => (
-            <div
-              key={evt.id}
-              className="bg-[#0D1628] border border-[#1E2E4E] hover:border-[#283E66] rounded-lg p-5 transition-colors"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-                <div className="space-y-2 flex-1">
-                  {/* Badges / metadata */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-[10px] font-mono uppercase bg-[#121F38] text-slate-200 px-2 py-0.5 rounded border border-[#1E2E4E] font-semibold">
-                      {evt.event_type.replace(/_/g, ' ')}
-                    </span>
-                    <span className="text-xs font-mono text-slate-400">
-                      {new Date(evt.detected_at).toLocaleString([], {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                    <span className="text-xs text-slate-400">
-                      • Corridor:{' '}
+          {paginatedEvents.map((evt: RiskEvent) => {
+            const isCritical = typeof evt.severity === 'number' && evt.severity >= 80
+            const isHigh = typeof evt.severity === 'number' && evt.severity >= 70 && evt.severity < 80
+            const borderAccent = isCritical ? 'border-rose-900/60' : isHigh ? 'border-orange-900/50' : 'border-[#1E2E4E]'
+
+            return (
+              <motion.div
+                key={evt.id}
+                initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className={`bg-[#0D1628] border ${borderAccent} hover:border-[#283E66] rounded-lg p-5 transition-colors`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="space-y-2 flex-1">
+                    {/* Badges / metadata */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-mono uppercase bg-[#121F38] text-slate-200 px-2 py-0.5 rounded border border-[#1E2E4E] font-semibold">
+                        {evt.event_type.replace(/_/g, ' ')}
+                      </span>
+                      <span className="text-xs font-mono text-slate-400">
+                        {new Date(evt.detected_at).toLocaleString([], {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
+                      </span>
+                      <span className="text-xs text-slate-400">
+                        • Corridor:{' '}
+                        <Link
+                          to={`/suppliers?region=${encodeURIComponent(evt.region)}`}
+                          className="text-slate-300 hover:text-[#3DD6C4] font-medium underline underline-offset-2"
+                          title="Filter supplier directory to this corridor"
+                        >
+                          {evt.region}
+                        </Link>
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400 bg-[#080E1C] px-2 py-0.5 rounded border border-[#1E2E4E]">
+                        {evt.source}
+                      </span>
+                    </div>
+
+                    {/* Headline & Summary */}
+                    <h3 className="text-base font-semibold text-white tracking-tight">
+                      {evt.headline}
+                    </h3>
+
+                    {evt.summary && (
+                      <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
+                        {evt.summary}
+                      </p>
+                    )}
+
+                    {/* Actions & Links */}
+                    <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
                       <Link
                         to={`/suppliers?region=${encodeURIComponent(evt.region)}`}
-                        className="text-slate-300 hover:text-[#3DD6C4] font-medium underline underline-offset-2"
-                        title="Filter supplier directory to this corridor"
+                        className="inline-flex items-center space-x-1 text-[#3DD6C4] hover:underline"
                       >
-                        {evt.region}
+                        <Building2 className="w-3.5 h-3.5" />
+                        <span>View corridor suppliers</span>
                       </Link>
-                    </span>
-                    <span className="text-[10px] font-mono text-slate-400 bg-[#080E1C] px-2 py-0.5 rounded border border-[#1E2E4E]">
-                      {evt.source}
-                    </span>
+
+                      {evt.raw_url && (
+                        <a
+                          href={evt.raw_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center space-x-1 text-slate-400 hover:text-white"
+                        >
+                          <span>Original Provider Signal</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Headline & Summary */}
-                  <h3 className="text-base font-semibold text-white tracking-tight">
-                    {evt.headline}
-                  </h3>
+                  {/* Severity & Confidence */}
+                  <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 bg-[#080E1C] border border-[#1E2E4E] p-3 rounded-md min-w-[110px] text-right font-mono">
+                    {typeof evt.severity === 'number' && (
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase block">Severity</span>
+                        <span
+                          className="text-sm font-bold"
+                          style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
+                        >
+                          {evt.severity.toFixed(1)}/100
+                        </span>
+                      </div>
+                    )}
 
-                  {evt.summary && (
-                    <p className="text-xs text-slate-300 leading-relaxed line-clamp-3">
-                      {evt.summary}
-                    </p>
-                  )}
-
-                  {/* Actions & Links */}
-                  <div className="flex flex-wrap items-center gap-4 pt-1 text-xs">
-                    <Link
-                      to={`/suppliers?region=${encodeURIComponent(evt.region)}`}
-                      className="inline-flex items-center space-x-1 text-[#3DD6C4] hover:underline"
-                    >
-                      <Building2 className="w-3.5 h-3.5" />
-                      <span>View corridor suppliers</span>
-                    </Link>
-
-                    {evt.raw_url && (
-                      <a
-                        href={evt.raw_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1 text-slate-400 hover:text-white"
-                      >
-                        <span>Original Provider Signal</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                    {typeof evt.confidence === 'number' && (
+                      <div>
+                        <span className="text-[10px] text-slate-500 uppercase block">Confidence</span>
+                        <span className="text-xs text-slate-300">
+                          {(evt.confidence * 100).toFixed(0)}%
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
-
-                {/* Severity & Confidence */}
-                <div className="flex sm:flex-col items-end justify-between sm:justify-start gap-2 shrink-0 bg-[#080E1C] border border-[#1E2E4E] p-3 rounded-md min-w-[110px] text-right font-mono">
-                  {typeof evt.severity === 'number' && (
-                    <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">Severity</span>
-                      <span
-                        className="text-sm font-bold"
-                        style={{ color: RISK_COLORS[getRiskLevel(evt.severity)] }}
-                      >
-                        {evt.severity.toFixed(1)}/100
-                      </span>
-                    </div>
-                  )}
-
-                  {typeof evt.confidence === 'number' && (
-                    <div>
-                      <span className="text-[10px] text-slate-500 uppercase block">Confidence</span>
-                      <span className="text-xs text-slate-300">
-                        {(evt.confidence * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
+              </motion.div>
+            )
+          })}
 
           {/* Pagination Controls */}
           {totalPages > 1 && (

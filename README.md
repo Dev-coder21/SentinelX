@@ -369,7 +369,21 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Overhauled Dashboard, Network, Supplier Directory, Supplier Detail, Risk Events, and Prioritization pages with zero generic AI tropes (no glowing neon blobs, no purple gradients, no fake terminal text, no marketing bento cards).
   - All Recharts data visualizations standardized with centralized grid, axis, and tooltip themes.
   - 100% real API data preserved; 0 lint errors, clean TypeScript build, and 86/86 backend tests passing.
-- [ ] **Phase 13: Dedicated Motion & Animation Pass (Next)**
-  - Cohesive operational motion design, graph interaction transitions, telemetry updates, and reduced-motion compliance.
+- [x] **Phase 13: Signature Motion & Interaction System (COMPLETE)**
+  - Purposeful, operational motion architecture communicating state, change, causality, hierarchy, and focus (150–250ms timings).
+  - Centralized motion tokens and transition presets in `src/lib/motion.ts` and `src/hooks/usePrefersReducedMotion.ts`.
+  - Global route transitions: subtle 200ms opacity + 4px micro-translation in `AppShell.tsx`, with immediate zero-duration change when reduced motion is preferred.
+  - Navbar: Controlled mobile drawer slide-down/fade via `AnimatePresence`, active link transitions, and active-scale feedback.
+  - Dashboard KPI Motion: Reusable `<AnimatedNumber />` component smoothly interpolating metrics (total suppliers, average risk, high/med/low counts, protected revenue) using cubic ease-out, settling instantly when reduced motion is enabled.
+  - Recharts motion: synchronized `isAnimationActive={!reducedMotion}` with 250ms reveal across Area, Line, and Bar charts.
+  - Risk-state indicators: restrained ping dot on Critical risk nodes/badges and rings on High risk nodes, automatically disabled under `prefers-reduced-motion`.
+  - Network Graph: Smooth node hover/selection highlighting, 450ms animated camera centering, and slide-in/fade inspection panel via `AnimatePresence`.
+  - Supplier Detail: Animated mathematical risk decomposition values, smoothly transitioning telemetry bars, and chart reveal.
+  - Risk Events Feed: Controlled 180ms entrance transitions for loaded signals, and restrained severity borders for High/Critical events.
+  - Prioritization Workspace: Real-time PuLP solver execution states, 220ms budget utilization progress bar, animated protected revenue currency counter, and top priority visual emphasis.
+  - Global accessible reduced-motion reset in `index.css` neutralizing CSS animations and transitions for users requesting reduced motion.
+  - Zero mock data; 100% real API integration, 0 oxlint warnings, clean Vite production build, and 86/86 backend pytest passing.
+- [ ] **Phase 14: Production UX & Accessibility Audit (Next)**
+  - Comprehensive accessibility compliance (WCAG 2.1 AA), keyboard navigation flow, ARIA attributes, color contrast verification, and responsive UX hardening.
 
 

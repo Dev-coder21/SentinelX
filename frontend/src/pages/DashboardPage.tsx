@@ -33,11 +33,14 @@ import { ErrorState } from '@/components/common/ErrorState'
 import { StatCard } from '@/components/common/StatCard'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import { PageHeader } from '@/components/common/PageHeader'
+import { AnimatedNumber } from '@/components/common/AnimatedNumber'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import { CHART_THEME } from '@/lib/tokens'
 import type { RiskLevel } from '@/types/api'
 
 export const DashboardPage: React.FC = () => {
+  const reducedMotion = usePrefersReducedMotion()
   const fetchSummary = useCallback(() => apiClient.getDashboardSummary(), [])
   const { data, loading, error, errorStatus, refetch } = useApi(fetchSummary, [])
 
@@ -102,7 +105,7 @@ export const DashboardPage: React.FC = () => {
         <Link to="/suppliers" className="group">
           <StatCard
             label="Total Fleet"
-            value={overview?.total_suppliers ?? 0}
+            value={<AnimatedNumber value={overview?.total_suppliers ?? 0} />}
             icon={<Building2 className="w-4 h-4 group-hover:text-[#3DD6C4] transition-colors" />}
             subtext="Tier-1 & Tier-2 Network"
             className="group-hover:border-[#2A4370] transition-all h-full"
@@ -111,7 +114,17 @@ export const DashboardPage: React.FC = () => {
         <div>
           <StatCard
             label="Fleet Avg Risk"
-            value={overview ? `${overview.average_risk.toFixed(1)}/100` : '—'}
+            value={
+              overview ? (
+                <AnimatedNumber
+                  value={overview.average_risk}
+                  decimals={1}
+                  suffix="/100"
+                />
+              ) : (
+                '—'
+              )
+            }
             variant={
               (overview?.average_risk ?? 0) >= 70
                 ? 'critical'
@@ -127,7 +140,7 @@ export const DashboardPage: React.FC = () => {
         <Link to="/suppliers?risk=HIGH" className="group">
           <StatCard
             label="High / Critical"
-            value={overview?.high_risk_supplier_count ?? 0}
+            value={<AnimatedNumber value={overview?.high_risk_supplier_count ?? 0} />}
             variant={(overview?.high_risk_supplier_count ?? 0) > 0 ? 'critical' : 'success'}
             icon={<ShieldAlert className="w-4 h-4 group-hover:text-rose-400 transition-colors" />}
             subtext="Score ≥ 70.0 (Filter)"
@@ -137,7 +150,7 @@ export const DashboardPage: React.FC = () => {
         <Link to="/suppliers?risk=MEDIUM" className="group">
           <StatCard
             label="Medium Risk"
-            value={overview?.medium_risk_supplier_count ?? 0}
+            value={<AnimatedNumber value={overview?.medium_risk_supplier_count ?? 0} />}
             variant="warning"
             icon={<AlertTriangle className="w-4 h-4 group-hover:text-amber-400 transition-colors" />}
             subtext="Score 40.0–69.9 (Filter)"
@@ -147,7 +160,7 @@ export const DashboardPage: React.FC = () => {
         <Link to="/suppliers?risk=LOW" className="group">
           <StatCard
             label="Low Risk"
-            value={overview?.low_risk_supplier_count ?? 0}
+            value={<AnimatedNumber value={overview?.low_risk_supplier_count ?? 0} />}
             variant="success"
             icon={<CheckCircle2 className="w-4 h-4 group-hover:text-emerald-400 transition-colors" />}
             subtext="Score < 40.0 (Filter)"
@@ -237,19 +250,19 @@ export const DashboardPage: React.FC = () => {
               <div className="flex justify-between items-baseline">
                 <span className="text-xs text-slate-400">Budget Allocated:</span>
                 <span className="text-sm font-mono font-bold text-white">
-                  ${latestOpt.total_budget_used.toLocaleString()} / ${latestOpt.budget.toLocaleString()}
+                  $<AnimatedNumber value={latestOpt.total_budget_used} /> / $<AnimatedNumber value={latestOpt.budget} />
                 </span>
               </div>
               <div className="flex justify-between items-baseline">
                 <span className="text-xs text-slate-400">Protected Value:</span>
                 <span className="text-sm font-mono font-bold text-emerald-400">
-                  ${latestOpt.expected_protected_revenue.toLocaleString()}
+                  $<AnimatedNumber value={latestOpt.expected_protected_revenue} />
                 </span>
               </div>
               <div className="flex justify-between items-baseline">
                 <span className="text-xs text-slate-400">Suppliers Prioritized:</span>
                 <span className="text-sm font-mono text-slate-300">
-                  {latestOpt.selected_count} actions
+                  <AnimatedNumber value={latestOpt.selected_count} /> actions
                 </span>
               </div>
               <Link
@@ -346,6 +359,8 @@ export const DashboardPage: React.FC = () => {
                     strokeWidth={2}
                     fillOpacity={1}
                     fill="url(#riskGrad)"
+                    isAnimationActive={!reducedMotion}
+                    animationDuration={250}
                   />
                   <Line
                     yAxisId="right"
@@ -356,6 +371,8 @@ export const DashboardPage: React.FC = () => {
                     strokeWidth={2}
                     strokeDasharray="4 4"
                     dot={{ fill: CHART_THEME.highRisk, r: 3 }}
+                    isAnimationActive={!reducedMotion}
+                    animationDuration={250}
                   />
                 </AreaChart>
               </ResponsiveContainer>
@@ -402,7 +419,13 @@ export const DashboardPage: React.FC = () => {
                         return [`${payload.count} suppliers (${payload.percentage.toFixed(1)}%)`, payload.level]
                       }}
                     />
-                    <Bar dataKey="count" name="Suppliers" radius={[0, 4, 4, 0]}>
+                    <Bar
+                      dataKey="count"
+                      name="Suppliers"
+                      radius={[0, 4, 4, 0]}
+                      isAnimationActive={!reducedMotion}
+                      animationDuration={250}
+                    >
                       {riskDist.map((entry) => (
                         <Cell
                           key={`cell-${entry.level}`}

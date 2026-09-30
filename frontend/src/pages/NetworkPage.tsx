@@ -17,8 +17,10 @@ import {
   HelpCircle,
 } from 'lucide-react'
 import { ForceGraph2D } from 'react-force-graph'
+import { motion, AnimatePresence } from 'framer-motion'
 import { apiClient } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { PageHeader } from '@/components/common/PageHeader'
@@ -107,18 +109,7 @@ export const NetworkPage: React.FC = () => {
   const [showLegend, setShowLegend] = useState<boolean>(true)
 
   // Motion preference detection
-  const [reducedMotion, setReducedMotion] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  })
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const handler = (e: MediaQueryListEvent) => setReducedMotion(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
+  const reducedMotion = usePrefersReducedMotion()
 
   // Responsive container observer
   useEffect(() => {
@@ -846,140 +837,148 @@ export const NetworkPage: React.FC = () => {
           )}
 
           {/* Contextual Selected Node Detail Slide-Over Card (Bottom Right / Side) */}
-          {selectedNode && selectedNodeDetails && (
-            <div className="absolute top-4 left-4 sm:left-auto sm:right-16 z-20 w-auto max-w-[340px] sm:max-w-[360px] bg-[#0D1628]/95 border border-[#2B426E] backdrop-blur rounded-lg p-4 shadow-2xl transition-all">
-              {/* Header */}
-              <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#1E2E4E]">
-                <div className="space-y-0.5">
-                  <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
-                    {selectedNode.type === 'product' ? 'Product Line Assembly Hub' : 'Component Supplier Node'}
-                  </span>
-                  <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
-                    {selectedNode.type === 'product' ? (
-                      <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
-                    ) : (
-                      <Building2 className="w-4 h-4 text-[#3DD6C4] shrink-0" />
-                    )}
-                    <span className="line-clamp-1">{selectedNode.name}</span>
-                  </h3>
+          <AnimatePresence>
+            {selectedNode && selectedNodeDetails && (
+              <motion.div
+                initial={{ opacity: 0, x: reducedMotion ? 0 : 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: reducedMotion ? 0 : 20 }}
+                transition={{ duration: reducedMotion ? 0 : 0.22, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute top-4 left-4 sm:left-auto sm:right-16 z-20 w-auto max-w-[340px] sm:max-w-[360px] bg-[#0D1628]/95 border border-[#2B426E] backdrop-blur rounded-lg p-4 shadow-2xl"
+              >
+                {/* Header */}
+                <div className="flex items-start justify-between gap-2 pb-3 border-b border-[#1E2E4E]">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-400 block">
+                      {selectedNode.type === 'product' ? 'Product Line Assembly Hub' : 'Component Supplier Node'}
+                    </span>
+                    <h3 className="text-base font-bold text-white tracking-tight flex items-center gap-2">
+                      {selectedNode.type === 'product' ? (
+                        <Layers className="w-4 h-4 text-indigo-400 shrink-0" />
+                      ) : (
+                        <Building2 className="w-4 h-4 text-[#3DD6C4] shrink-0" />
+                      )}
+                      <span className="line-clamp-1">{selectedNode.name}</span>
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedNode(null)}
+                    className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D] transition-colors"
+                    aria-label="Deselect node"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedNode(null)}
-                  className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D]"
-                  aria-label="Deselect node"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
 
-              {/* Node Properties */}
-              <div className="py-3 space-y-2.5 text-xs font-mono">
-                {selectedNode.type === 'product' ? (
-                  <>
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span className="text-slate-400">Assembly Corridor:</span>
-                      <span className="font-semibold text-white">{selectedNode.region}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span className="text-slate-400">Feeding Suppliers:</span>
-                      <span className="font-semibold text-[#3DD6C4]">
-                        {selectedNodeDetails.suppliers?.length ?? 0} components
-                      </span>
-                    </div>
-
-                    {/* Connected Suppliers preview */}
-                    <div className="pt-2 border-t border-[#1E2E4E]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1.5">
-                        Connected Component Feeders:
-                      </span>
-                      <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
-                        {selectedNodeDetails.suppliers?.map((sup) => (
-                          <div
-                            key={sup.id}
-                            onClick={() => {
-                              const node = filteredData.nodes.find((n) => n.id === sup.id)
-                              if (node) {
-                                setSelectedNode(node)
-                                fgRef.current?.centerAt(node.x, node.y, 400)
-                              }
-                            }}
-                            className="p-1.5 rounded bg-[#080E1C] hover:bg-[#14233D] cursor-pointer flex items-center justify-between text-[11px] border border-[#16233B]"
-                          >
-                            <span className="text-slate-200 truncate max-w-[190px]">{sup.name}</span>
-                            <RiskBadge score={sup.current_risk_score} size="sm" />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-slate-400">Current Risk Status:</span>
-                      <RiskBadge
-                        score={selectedNode.current_risk_score}
-                        level={getNodeRiskLevel(selectedNode.current_risk_score)}
-                        size="sm"
-                      />
-                    </div>
-
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span className="text-slate-400">Criticality Standing:</span>
-                      <span className="font-bold text-amber-400">
-                        Tier {selectedNode.criticality_tier}
-                      </span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-slate-300">
-                      <span className="text-slate-400">Corridor / Country:</span>
-                      <span className="text-white">
-                        {selectedNode.region} ({selectedNode.country})
-                      </span>
-                    </div>
-
-                    {typeof selectedNode.annual_spend === 'number' && (
+                {/* Node Properties */}
+                <div className="py-3 space-y-2.5 text-xs font-mono">
+                  {selectedNode.type === 'product' ? (
+                    <>
                       <div className="flex justify-between items-center text-slate-300">
-                        <span className="text-slate-400">Annual Procurement:</span>
-                        <span className="text-white">${selectedNode.annual_spend.toLocaleString()}</span>
+                        <span className="text-slate-400">Assembly Corridor:</span>
+                        <span className="font-semibold text-white">{selectedNode.region}</span>
                       </div>
-                    )}
-
-                    {/* Downstream product lines */}
-                    <div className="pt-2 border-t border-[#1E2E4E]">
-                      <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
-                        Downstream Product Dependents:
-                      </span>
-                      <div className="space-y-1">
-                        {selectedNodeDetails.productLines?.map((pl) => (
-                          <div
-                            key={pl.id}
-                            className="flex items-center justify-between text-[11px] p-1.5 rounded bg-[#080E1C] border border-[#16233B]"
-                          >
-                            <span className="text-indigo-300">{pl.company_product}</span>
-                            <span className="text-slate-400">
-                              Weight: <strong>{pl.dependency_weight.toFixed(2)}</strong>
-                            </span>
-                          </div>
-                        ))}
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span className="text-slate-400">Feeding Suppliers:</span>
+                        <span className="font-semibold text-[#3DD6C4]">
+                          {selectedNodeDetails.suppliers?.length ?? 0} components
+                        </span>
                       </div>
-                    </div>
 
-                    {/* Action button to open full supplier telemetry */}
-                    <div className="pt-3 border-t border-[#1E2E4E]">
-                      <Link
-                        to={`/suppliers/${selectedNode.id}`}
-                        className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-md bg-[#142540] hover:bg-[#1C3357] text-[#3DD6C4] border border-[#3DD6C4]/30 hover:border-[#3DD6C4] text-xs font-semibold transition-colors"
-                      >
-                        <span>Open Deep-Dive Telemetry</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+                      {/* Connected Suppliers preview */}
+                      <div className="pt-2 border-t border-[#1E2E4E]">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1.5">
+                          Connected Component Feeders:
+                        </span>
+                        <div className="max-h-36 overflow-y-auto space-y-1 pr-1">
+                          {selectedNodeDetails.suppliers?.map((sup) => (
+                            <div
+                              key={sup.id}
+                              onClick={() => {
+                                const node = filteredData.nodes.find((n) => n.id === sup.id)
+                                if (node) {
+                                  setSelectedNode(node)
+                                  fgRef.current?.centerAt(node.x, node.y, 400)
+                                }
+                              }}
+                              className="p-1.5 rounded bg-[#080E1C] hover:bg-[#14233D] cursor-pointer flex items-center justify-between text-[11px] border border-[#16233B] transition-colors"
+                            >
+                              <span className="text-slate-200 truncate max-w-[190px]">{sup.name}</span>
+                              <RiskBadge score={sup.current_risk_score} size="sm" />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-400">Current Risk Status:</span>
+                        <RiskBadge
+                          score={selectedNode.current_risk_score}
+                          level={getNodeRiskLevel(selectedNode.current_risk_score)}
+                          size="sm"
+                        />
+                      </div>
+
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span className="text-slate-400">Criticality Standing:</span>
+                        <span className="font-bold text-amber-400">
+                          Tier {selectedNode.criticality_tier}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center text-slate-300">
+                        <span className="text-slate-400">Corridor / Country:</span>
+                        <span className="text-white">
+                          {selectedNode.region} ({selectedNode.country})
+                        </span>
+                      </div>
+
+                      {typeof selectedNode.annual_spend === 'number' && (
+                        <div className="flex justify-between items-center text-slate-300">
+                          <span className="text-slate-400">Annual Procurement:</span>
+                          <span className="text-white">${selectedNode.annual_spend.toLocaleString()}</span>
+                        </div>
+                      )}
+
+                      {/* Downstream product lines */}
+                      <div className="pt-2 border-t border-[#1E2E4E]">
+                        <span className="text-[10px] text-slate-400 uppercase tracking-wider block mb-1">
+                          Downstream Product Dependents:
+                        </span>
+                        <div className="space-y-1">
+                          {selectedNodeDetails.productLines?.map((pl) => (
+                            <div
+                              key={pl.id}
+                              className="flex items-center justify-between text-[11px] p-1.5 rounded bg-[#080E1C] border border-[#16233B]"
+                            >
+                              <span className="text-indigo-300">{pl.company_product}</span>
+                              <span className="text-slate-400">
+                                Weight: <strong>{pl.dependency_weight.toFixed(2)}</strong>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Action button to open full supplier telemetry */}
+                      <div className="pt-3 border-t border-[#1E2E4E]">
+                        <Link
+                          to={`/suppliers/${selectedNode.id}`}
+                          className="w-full inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-md bg-[#142540] hover:bg-[#1C3357] text-[#3DD6C4] border border-[#3DD6C4]/30 hover:border-[#3DD6C4] text-xs font-semibold transition-colors"
+                        >
+                          <span>Open Deep-Dive Telemetry</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </div>

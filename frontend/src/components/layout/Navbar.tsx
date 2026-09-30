@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShieldCheck,
   LayoutDashboard,
@@ -14,6 +15,7 @@ import {
   AlertCircle,
 } from 'lucide-react'
 import { apiClient } from '@/api/client'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import type { HealthStatus } from '@/types/api'
 
 const NAV_ITEMS = [
@@ -30,6 +32,7 @@ export const Navbar: React.FC = () => {
   const [healthLoading, setHealthLoading] = useState(true)
   const [healthError, setHealthError] = useState(false)
   const location = useLocation()
+  const reducedMotion = usePrefersReducedMotion()
 
   useEffect(() => {
     let mounted = true
@@ -65,7 +68,7 @@ export const Navbar: React.FC = () => {
           {/* Logo / Brand */}
           <div className="flex items-center space-x-3">
             <NavLink to="/dashboard" className="flex items-center space-x-2.5 group">
-              <div className="h-8 w-8 rounded-md bg-[#0F1C33] border border-[#233B62] flex items-center justify-center transition-colors group-hover:border-[#3DD6C4]/60">
+              <div className="h-8 w-8 rounded-md bg-[#0F1C33] border border-[#233B62] flex items-center justify-center transition-colors duration-150 group-hover:border-[#3DD6C4]/60 active:scale-95">
                 <ShieldCheck className="h-4.5 w-4.5 text-[#3DD6C4] stroke-[2]" />
               </div>
               <div className="flex items-baseline space-x-1.5">
@@ -92,7 +95,7 @@ export const Navbar: React.FC = () => {
                 <NavLink
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 active:scale-[0.98] ${
                     isActive
                       ? 'bg-[#14233D] text-[#3DD6C4] border border-[#233B62] shadow-sm'
                       : 'text-slate-400 hover:text-slate-200 hover:bg-[#101A2F]'
@@ -108,7 +111,7 @@ export const Navbar: React.FC = () => {
           {/* Right Status Indicator */}
           <div className="hidden sm:flex items-center space-x-3">
             <div
-              className="flex items-center space-x-2 text-[11px] font-mono px-2.5 py-1 rounded bg-[#0D1628] border border-[#1E2E4E]"
+              className="flex items-center space-x-2 text-[11px] font-mono px-2.5 py-1 rounded bg-[#0D1628] border border-[#1E2E4E] transition-colors"
               title="Backend connectivity status"
             >
               <span className="text-slate-500">API:</span>
@@ -133,7 +136,7 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D] focus:outline-none focus:ring-1 focus:ring-[#3DD6C4]"
+              className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-[#14233D] focus:outline-none focus:ring-1 focus:ring-[#3DD6C4] transition-colors active:scale-95"
               aria-label="Toggle mobile menu"
               aria-expanded={mobileMenuOpen}
             >
@@ -144,43 +147,54 @@ export const Navbar: React.FC = () => {
       </div>
 
       {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden border-b border-[#1E2E4E] bg-[#0D1628] px-4 pt-2 pb-4 space-y-1">
-          {NAV_ITEMS.map((item) => {
-            const Icon = item.icon
-            const isActive =
-              item.path === '/dashboard'
-                ? location.pathname === '/' || location.pathname === '/dashboard'
-                : location.pathname.startsWith(item.path)
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{
+              duration: reducedMotion ? 0 : 0.2,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+            className="md:hidden overflow-hidden border-b border-[#1E2E4E] bg-[#0D1628] px-4 pt-2 pb-4 space-y-1"
+          >
+            {NAV_ITEMS.map((item) => {
+              const Icon = item.icon
+              const isActive =
+                item.path === '/dashboard'
+                  ? location.pathname === '/' || location.pathname === '/dashboard'
+                  : location.pathname.startsWith(item.path)
 
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center space-x-3 px-3 py-2 rounded-md text-xs font-medium ${
-                  isActive
-                    ? 'bg-[#14233D] text-[#3DD6C4] border border-[#233B62]'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-[#101A2F]'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </NavLink>
-            )
-          })}
-          <div className="pt-2 border-t border-[#1E2E4E] flex items-center justify-between text-xs font-mono text-slate-400 px-3">
-            <span>Backend Status:</span>
-            {healthLoading ? (
-              <span className="text-amber-400">Connecting...</span>
-            ) : healthError ? (
-              <span className="text-rose-400">Offline</span>
-            ) : (
-              <span className="text-emerald-400">Online ({health?.status})</span>
-            )}
-          </div>
-        </div>
-      )}
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center space-x-3 px-3 py-2 rounded-md text-xs font-medium transition-colors ${
+                    isActive
+                      ? 'bg-[#14233D] text-[#3DD6C4] border border-[#233B62]'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#101A2F]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </NavLink>
+              )
+            })}
+            <div className="pt-2 border-t border-[#1E2E4E] flex items-center justify-between text-xs font-mono text-slate-400 px-3">
+              <span>Backend Status:</span>
+              {healthLoading ? (
+                <span className="text-amber-400">Connecting...</span>
+              ) : healthError ? (
+                <span className="text-rose-400">Offline</span>
+              ) : (
+                <span className="text-emerald-400">Online ({health?.status})</span>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   )
 }

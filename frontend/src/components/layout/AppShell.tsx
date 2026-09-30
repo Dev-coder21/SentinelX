@@ -1,16 +1,31 @@
 import React from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { Navbar } from './Navbar'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 
 export const AppShell: React.FC = () => {
+  const location = useLocation()
+  const reducedMotion = usePrefersReducedMotion()
+
   return (
     <div className="min-h-screen bg-[#080E1C] text-slate-100 flex flex-col font-sans">
       {/* Top Bar Navigation */}
       <Navbar />
 
-      {/* Main Page Area */}
+      {/* Main Page Area with subtle route transition */}
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        <Outlet />
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: reducedMotion ? 0 : 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{
+            duration: reducedMotion ? 0 : 0.2,
+            ease: [0.16, 1, 0.3, 1],
+          }}
+        >
+          <Outlet />
+        </motion.div>
       </main>
 
       {/* Professional Command Center Footer */}

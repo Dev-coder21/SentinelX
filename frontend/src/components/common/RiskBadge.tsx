@@ -47,9 +47,20 @@ export const RiskBadge: React.FC<RiskBadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center font-mono font-medium rounded-md border ${colorClasses} ${sizeClasses}`}
+      className={`inline-flex items-center font-mono font-medium rounded-md border transition-colors duration-200 ${colorClasses} ${sizeClasses}`}
     >
-      <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+      {resolvedLevel === 'CRITICAL' ? (
+        <span className="relative flex h-1.5 w-1.5">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-60 motion-reduce:hidden" />
+          <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${dotColor}`} />
+        </span>
+      ) : resolvedLevel === 'HIGH' ? (
+        <span className="relative flex h-1.5 w-1.5">
+          <span className={`inline-flex rounded-full h-1.5 w-1.5 ${dotColor} ring-1 ring-orange-400/40`} />
+        </span>
+      ) : (
+        <span className={`w-1.5 h-1.5 rounded-full ${dotColor}`} />
+      )}
       <span>{resolvedLevel}</span>
       {showScore && typeof score === 'number' && (
         <span className="opacity-80 font-bold">({score.toFixed(1)})</span>

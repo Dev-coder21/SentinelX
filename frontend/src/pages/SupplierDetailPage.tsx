@@ -34,11 +34,14 @@ import { useApi } from '@/hooks/useApi'
 import { LoadingState } from '@/components/common/LoadingState'
 import { ErrorState } from '@/components/common/ErrorState'
 import { RiskBadge } from '@/components/common/RiskBadge'
+import { AnimatedNumber } from '@/components/common/AnimatedNumber'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { RISK_COLORS, getRiskLevel } from '@/lib/risk'
 import { CHART_THEME } from '@/lib/tokens'
 import type { ContributingFactors, TopEventDetail } from '@/types/api'
 
 export const SupplierDetailPage: React.FC = () => {
+  const reducedMotion = usePrefersReducedMotion()
   const { id } = useParams<{ id: string }>()
 
   const fetchDetail = useCallback(() => {
@@ -265,7 +268,7 @@ export const SupplierDetailPage: React.FC = () => {
               Raw Signal Exposure
             </span>
             <span className="text-xl font-bold font-mono text-slate-200">
-              {rawRisk !== null ? rawRisk.toFixed(1) : '—'}
+              {rawRisk !== null ? <AnimatedNumber value={rawRisk} decimals={1} /> : '—'}
             </span>
             <span className="text-[10px] text-slate-500 block mt-0.5 font-mono">Sublinear saturation</span>
           </div>
@@ -302,7 +305,7 @@ export const SupplierDetailPage: React.FC = () => {
               className="text-2xl font-bold font-mono"
               style={{ color: RISK_COLORS[getRiskLevel(finalScore)] }}
             >
-              {typeof finalScore === 'number' ? finalScore.toFixed(1) : '0.0'}
+              {typeof finalScore === 'number' ? <AnimatedNumber value={finalScore} decimals={1} /> : '0.0'}
             </span>
             <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
               / 100 ({getRiskLevel(finalScore)})
@@ -491,6 +494,8 @@ export const SupplierDetailPage: React.FC = () => {
                     strokeWidth={2.5}
                     dot={{ fill: '#3DD6C4', r: 3 }}
                     activeDot={{ r: 5 }}
+                    isAnimationActive={!reducedMotion}
+                    animationDuration={250}
                   />
                 </LineChart>
               </ResponsiveContainer>

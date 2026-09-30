@@ -18,29 +18,12 @@ import {
 } from 'lucide-react'
 import { apiClient, ApiError } from '@/api/client'
 import { useApi } from '@/hooks/useApi'
+import { usePrefersReducedMotion } from '@/hooks/usePrefersReducedMotion'
 import { LoadingState } from '@/components/common/LoadingState'
 import { EmptyState } from '@/components/common/EmptyState'
 import { PageHeader } from '@/components/common/PageHeader'
 import { RiskBadge } from '@/components/common/RiskBadge'
 import type { PrioritizeResponse } from '@/types/api'
-
-// Hook to detect prefers-reduced-motion
-function usePrefersReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(() => {
-    if (typeof window === 'undefined') return false
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  })
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
-  }, [])
-
-  return reduced
-}
 
 // Animated currency counter settling strictly on the exact API value
 const AnimatedCurrency: React.FC<{
@@ -459,33 +442,42 @@ export const PrioritizationPage: React.FC = () => {
 
               {/* Action Cards Grid */}
               <div className="space-y-3.5">
-                {activePlan.selected_suppliers.map((item, index) => (
-                  <motion.div
-                    key={item.supplier_id}
-                    initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{
-                      duration: reducedMotion ? 0 : 0.2,
-                      delay: reducedMotion ? 0 : index * 0.04,
-                    }}
-                    className="bg-[#0D1628] border border-[#1E2E4E] hover:border-[#283E66] rounded-lg p-5 transition-all"
-                  >
-                    <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
-                      {/* Left: Supplier Identity & Critical Metrics */}
-                      <div className="space-y-3 flex-1">
-                        {/* Title Bar */}
-                        <div className="flex flex-wrap items-center gap-2.5">
-                          <span className="text-xs font-mono font-bold bg-[#121F38] text-slate-300 px-2 py-0.5 rounded border border-[#1E2E4E]">
-                            #{index + 1}
-                          </span>
-                          <h4 className="text-lg font-bold text-white tracking-tight">
-                            {item.supplier_name}
-                          </h4>
-                          <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/60 text-rose-300 border border-rose-800/60">
-                            Tier {item.criticality_tier}
-                          </span>
-                          <RiskBadge score={item.current_risk_score} size="sm" />
-                        </div>
+                {activePlan.selected_suppliers.map((item, index) => {
+                  const isTopPriority = index === 0
+                  return (
+                    <motion.div
+                      key={item.supplier_id}
+                      initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: reducedMotion ? 0 : 0.18,
+                        delay: reducedMotion ? 0 : Math.min(index * 0.03, 0.15),
+                      }}
+                      className={`bg-[#0D1628] border ${
+                        isTopPriority ? 'border-[#3DD6C4]/50 shadow-sm' : 'border-[#1E2E4E]'
+                      } hover:border-[#283E66] rounded-lg p-5 transition-all`}
+                    >
+                      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                        {/* Left: Supplier Identity & Critical Metrics */}
+                        <div className="space-y-3 flex-1">
+                          {/* Title Bar */}
+                          <div className="flex flex-wrap items-center gap-2.5">
+                            <span className="text-xs font-mono font-bold bg-[#121F38] text-slate-300 px-2 py-0.5 rounded border border-[#1E2E4E]">
+                              #{index + 1}
+                            </span>
+                            <h4 className="text-lg font-bold text-white tracking-tight">
+                              {item.supplier_name}
+                            </h4>
+                            {isTopPriority && (
+                              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-[#3DD6C4]/10 text-[#3DD6C4] border border-[#3DD6C4]/30">
+                                Top Priority
+                              </span>
+                            )}
+                            <span className="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-rose-950/60 text-rose-300 border border-rose-800/60">
+                              Tier {item.criticality_tier}
+                            </span>
+                            <RiskBadge score={item.current_risk_score} size="sm" />
+                          </div>
 
                         {/* Financial & Operational Parameters */}
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs font-mono">
@@ -560,7 +552,8 @@ export const PrioritizationPage: React.FC = () => {
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                )
+              })}
               </div>
             </div>
           )}
