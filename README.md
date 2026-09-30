@@ -328,7 +328,14 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Metrics: Overview KPIs (suppliers, avg risk, high/medium/low counts, highest risk supplier), Risk Distribution (LOW, MEDIUM, HIGH, CRITICAL), Regional Risk summaries, chronological Risk Trend history (Recharts-ready), Event Type Distribution (14-day window), Recent Events with correlated affected suppliers, and latest persisted Mitigation Plan.
   - Real database queries only with graceful handling for partial/empty data states.
   - 86 comprehensive backend tests passing.
-- [ ] **Phase 8: Frontend Command Center & Force-Directed Graph (Next)**
-  - Interactive visualization, risk radar, animated budget bar, and mitigation simulator.
+- [x] **Phase 8: Frontend Application Core (COMPLETE)**
+  - Modular React 19 + TypeScript + Vite + Tailwind CSS application shell and client-side routing.
+  - Centralized API client with normalized error handling, timeout abort, and environment-configurable base URL.
+  - Strongly typed API interfaces matching all FastAPI backend models.
+  - Complete operational views: Dashboard with Recharts telemetry (risk distribution, regional concentration, historical trend), Supplier Directory with search and corridor/tier filters, Supplier Detail with risk trajectory and explainable contributing factors, Risk Events Feed with corridor/source filtering, Network Page foundation, and Mitigation Prioritization workspace.
+  - Zero mock data; connected directly to live backend endpoints.
+  - 100% clean type-check (`tsc -b`), lint (`oxlint` 0 warnings), and production build.
+- [ ] **Phase 9: Interactive Network Graph & Advanced Visualizations (Next)**
+  - Interactive force-directed canvas with particle flow, blast-radius simulation, and physics controls.
 
 
