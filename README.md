@@ -322,8 +322,13 @@ Every optimization run is persisted to `mitigation_plans` with full budget utili
   - Deterministic derivation of mitigation costs, risk exposure, and expected protected revenue.
   - Human-readable ROI rationale generated for every prioritized supplier.
   - Endpoints `POST /prioritize` and `GET /mitigation-plans/latest` with full audit persistence.
-  - 74 comprehensive backend tests passing.
-- [ ] **Phase 7: Frontend Command Center & Force-Directed Graph (Next)**
+- [x] **Phase 7: Production Dashboard Aggregation API (COMPLETE)**
+  - High-performance, constant-query ($O(1)$, zero N+1) aggregation service for executive dashboard command center.
+  - Aggregated endpoints: `GET /dashboard/summary` and `GET /api/v1/dashboard/summary`.
+  - Metrics: Overview KPIs (suppliers, avg risk, high/medium/low counts, highest risk supplier), Risk Distribution (LOW, MEDIUM, HIGH, CRITICAL), Regional Risk summaries, chronological Risk Trend history (Recharts-ready), Event Type Distribution (14-day window), Recent Events with correlated affected suppliers, and latest persisted Mitigation Plan.
+  - Real database queries only with graceful handling for partial/empty data states.
+  - 86 comprehensive backend tests passing.
+- [ ] **Phase 8: Frontend Command Center & Force-Directed Graph (Next)**
   - Interactive visualization, risk radar, animated budget bar, and mitigation simulator.
 
 
