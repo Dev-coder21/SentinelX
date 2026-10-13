@@ -7,6 +7,8 @@ const port = Number(process.env.PORT) || 5176
 
 // https://vite.dev/config/
 export default defineConfig({
+  // GitHub Pages serves the site from /<repo>/; set BASE_PATH there, '/' everywhere else
+  base: process.env.BASE_PATH || '/',
   plugins: [react()],
   resolve: {
     alias: {

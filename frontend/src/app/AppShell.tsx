@@ -113,7 +113,6 @@ export function AppShell() {
         <div className="sep" />
         <div className="foot">
           <button onClick={backToSite}>Back to the site</button>
-          <span>Made by Dev Trivedi</span>
         </div>
       </aside>
       <div className="main">
