@@ -263,6 +263,10 @@ nio=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!netL){initNetL();nio
 $('#mode').addEventListener('click',()=>setMode(!DARK));if(DARK)setMode(true);
 if(introPlayed){const el=$('#intro');if(el)el.remove();heroIn();reveals()}else{intro(()=>{if(!DEAD){introPlayed=true;heroIn();reveals()}})}
 $$('[data-open]').forEach(b=>b.addEventListener('click',()=>opts.onOpen(b.dataset.open)));
+// Fit the footer wordmark to the page width once the real font has loaded.
+const wm=$('.wordmark');
+function fitWM(){if(!wm||DEAD)return;wm.style.fontSize='';for(let i=0;i<2;i++){const avail=wm.parentElement.clientWidth,w=wm.scrollWidth;if(avail&&w)wm.style.fontSize=(parseFloat(getComputedStyle(wm).fontSize)*avail/w)+'px'}}
+fitWM();ON(window,'resize',fitWM);if(document.fonts)document.fonts.ready.then(fitWM);
 return () => {
   DEAD = true; offs.forEach(f => f());
   try { lenis && lenis.destroy() } catch (e) {}
