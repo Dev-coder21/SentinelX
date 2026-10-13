@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
 
     # Database
-    DATABASE_URL: str = "postgresql://sentinelx:sentinelx@localhost:5432/sentinelx_db"
+    DATABASE_URL: str = "postgresql://sentinelx:sentinelx_password@localhost:5432/sentinelx_db"
 
     # External APIs
     NEWS_API_KEY: str = ""
@@ -27,6 +27,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5176",
+        "http://127.0.0.1:5176",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
     ]

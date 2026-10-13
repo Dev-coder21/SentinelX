@@ -14,11 +14,11 @@ import type {
   PrioritizeResponse,
 } from '@/types/api'
 
-// Base URL precedence: VITE_API_BASE_URL -> VITE_API_URL -> http://localhost:8000
+// Base URL precedence: VITE_API_BASE_URL -> VITE_API_URL -> http://localhost:8004
 const RAW_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   import.meta.env.VITE_API_URL ||
-  'http://localhost:8000'
+  'http://localhost:8004'
 
 export const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '')
 
