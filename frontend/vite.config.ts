@@ -2,6 +2,9 @@ import path from 'path'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
+const apiTarget = process.env.VITE_API_URL || 'http://localhost:8004'
+const port = Number(process.env.PORT) || 5176
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
@@ -11,35 +14,40 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port,
     host: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target: apiTarget,
         changeOrigin: true,
       },
       '/health': {
-        target: 'http://localhost:8000',
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/suppliers': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/network': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/risk-events': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/dashboard': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
+      '/prioritize': {
+        target: apiTarget,
         changeOrigin: true,
       },
     },
   },
   build: {
     chunkSizeWarningLimit: 2500,
-    rollupOptions: {
-      output: {
-        manualChunks(id: string) {
-          if (id.includes('node_modules/recharts')) {
-            return 'recharts'
-          }
-          if (id.includes('node_modules/framer-motion')) {
-            return 'motion'
-          }
-          if (id.includes('node_modules/react-force-graph') || id.includes('node_modules/d3')) {
-            return 'graph'
-          }
-        },
-      },
-    },
   },
 })

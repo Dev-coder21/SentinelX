@@ -269,53 +269,58 @@ sentinelx/
    ```bash
    docker compose up --build
    ```
-   - Frontend: `http://localhost:5173`
-   - Backend API: `http://localhost:8000`
-   - Swagger Documentation: `http://localhost:8000/docs`
+   - Landing page: `http://localhost:3000`
+   - App: `http://localhost:3000/app`
+   - Backend API: `http://localhost:8000` (Swagger at `http://localhost:8000/docs`)
+
+   The backend container runs `alembic upgrade head` and `python -m app.seed` on every start (the seed is idempotent). The frontend image is built with `VITE_API_URL=http://localhost:8000` (a build arg in `docker-compose.yml`).
+
+4. **Populate risk scores and signals** (the seed only inserts suppliers and dependencies):
+   ```bash
+   docker compose exec backend python -m app.jobs.refresh_risk
+   ```
 
 ---
 
 ### Option B: Running Locally from Source
 
-#### 1. Backend Setup
+Local ports: backend on **8004**, Vite dev server on **5176** (`frontend/.env` sets `VITE_API_URL=http://localhost:8004`).
+
+#### 1. Database
+
+Either start only the database container, or use any local PostgreSQL with a `sentinelx` / `sentinelx_password` role and a `sentinelx_db` database:
+
+```bash
+docker compose up -d db
+```
+
+#### 2. Backend Setup
 
 ```bash
 cd backend
-
-# Create virtual environment
 python3 -m venv venv
 source venv/bin/activate
-
-# Install dependencies
 pip install -r requirements.txt
-
-# Configure environment
 cp ../.env.example .env
 
-# Run database migrations
 alembic upgrade head
+python -m app.seed                 # suppliers + dependencies only
+python -m app.jobs.refresh_risk    # ingests signals and computes scores
 
-# Seed initial suppliers and dependency topology
-python -m app.seed
-
-# Start the FastAPI server
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn app.main:app --port 8004 --reload
 ```
 
-*Note on In-Memory Mode*: For local evaluation and testing without a running PostgreSQL instance, SentinelX automatically supports in-memory SQLite for test runs and offline backtests.
+If GDELT or Open-Meteo are unreachable the refresh still completes. Failed providers are logged and skipped, and every supplier is scored from whatever signals exist (0 if none). Event classification falls back to deterministic rules when no Gemini key is set. Set `ENABLE_SCHEDULER=true` to refresh automatically every `RISK_REFRESH_INTERVAL_MINUTES`.
 
-#### 2. Frontend Setup
+#### 3. Frontend Setup
 
 ```bash
-cd ../frontend
-
-# Install dependencies
+cd frontend
 npm install
-
-# Start development server
 npm run dev
 ```
-Open `http://localhost:5173` in your browser.
+
+Open `http://localhost:5176` (landing page) or `http://localhost:5176/app`.
 
 ---
 
