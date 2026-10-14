@@ -35,21 +35,23 @@ from app.seed import seed_database  # noqa: E402
 OUT = Path(__file__).resolve().parents[2] / "frontend" / "public" / "demo"
 
 # (event_type, headline, source, region, severity, sentiment, days_ago)
+# Tuned so the corridors land at different levels (a few critical, most elevated, some low)
+# rather than every region saturating at 100.
 SIGNALS = [
-    ("weather", "Typhoon warning for the Kaohsiung and Hsinchu science parks", "weather", "East Asia", 60, -0.35, 1),
-    ("logistics", "Asia to Europe carriers keep routing around the Cape, adding 10 to 14 days", "news", "Europe", 46, -0.55, 3),
-    ("labor", "Contract talks stall at US East and Gulf Coast container ports", "news", "North America", 54, -0.5, 2),
-    ("supply_shortage", "DRAM wafer allocations tighten as fabs shift capacity to HBM", "news", "East Asia", 48, -0.3, 5),
-    ("geopolitical", "Export licence review widened for lithography tooling", "news", "Europe", 48, -0.45, 6),
-    ("weather", "Monsoon flooding closes roads around the Bayan Lepas industrial zone", "weather", "Southeast Asia", 57, -0.4, 4),
-    ("logistics", "Yard congestion lengthens berth waits in Singapore", "news", "Southeast Asia", 42, -0.35, 2),
-    ("weather", "Heat advisory and rolling power cuts across Nuevo León", "weather", "North America", 40, -0.2, 7),
-    ("supply_shortage", "Cathode precursor prices jump after a refinery outage", "news", "Southeast Asia", 46, -0.4, 9),
-    ("labor", "Rail freight strike called across the German network", "news", "Europe", 44, -0.5, 8),
-    ("logistics", "Convoy delays build at the Suez Canal's southern entrance", "news", "Europe", 38, -0.45, 24),
-    ("other", "Hualien earthquake prompts fab tool inspections", "news", "East Asia", 44, -0.5, 19),
-    ("weather", "Typhoon remnants flood low-lying Shenzhen districts", "weather", "East Asia", 52, -0.3, 15),
-    ("logistics", "Long Beach terminals report container dwell times rising", "news", "North America", 36, -0.3, 12),
+    ("weather", "Typhoon warning for the Kaohsiung and Hsinchu science parks", "weather", "East Asia", 48, -0.35, 2),
+    ("supply_shortage", "DRAM wafer allocations tighten as fabs shift capacity to HBM", "news", "East Asia", 34, -0.3, 6),
+    ("other", "Hualien earthquake prompts fab tool inspections", "news", "East Asia", 30, -0.5, 21),
+    ("weather", "Typhoon remnants flood low-lying Shenzhen districts", "weather", "East Asia", 36, -0.3, 16),
+    ("weather", "Monsoon flooding closes roads around the Bayan Lepas industrial zone", "weather", "Southeast Asia", 30, -0.4, 5),
+    ("logistics", "Yard congestion lengthens berth waits in Singapore", "news", "Southeast Asia", 22, -0.35, 4),
+    ("supply_shortage", "Cathode precursor prices jump after a refinery outage", "news", "Southeast Asia", 26, -0.4, 11),
+    ("labor", "Contract talks stall at US East and Gulf Coast container ports", "news", "North America", 16, -0.4, 7),
+    ("weather", "Heat advisory and rolling power cuts across Nuevo León", "weather", "North America", 15, -0.2, 10),
+    ("logistics", "Long Beach terminals report container dwell times rising", "news", "North America", 12, -0.3, 15),
+    ("logistics", "Asia to Europe carriers keep routing around the Cape, adding 10 to 14 days", "news", "Europe", 32, -0.55, 3),
+    ("geopolitical", "Export licence review widened for lithography tooling", "news", "Europe", 26, -0.45, 8),
+    ("labor", "Rail freight strike called across the German network", "news", "Europe", 22, -0.5, 10),
+    ("logistics", "Convoy delays build at the Suez Canal's southern entrance", "news", "Europe", 20, -0.45, 25),
 ]
 
 BUDGET_STEP = 10_000
