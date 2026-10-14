@@ -36,13 +36,27 @@ export const DEMO_MODE =
 
 const DEMO_BASE = `${import.meta.env.BASE_URL}demo/`
 const demoCache = new Map<string, Promise<unknown>>()
+const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
+
+function fetchDemo(name: string) {
+  return fetch(DEMO_BASE + name).then((r) => {
+    if (!r.ok) throw new ApiError('Not found', r.status === 404 ? 404 : r.status)
+    return r.text()
+  })
+}
+
+// The snapshot was taken once; shift its timestamps so "updated 2 h ago" stays true to it.
+let demoShift: Promise<number> | null = null
+const getShift = () =>
+  (demoShift ??= fetchDemo('health.json')
+    .then((t) => Date.now() - Date.parse(JSON.parse(t).timestamp))
+    .catch(() => { demoShift = null; return 0 }))
 
 function demoFile<T>(name: string): Promise<T> {
   if (!demoCache.has(name)) {
-    demoCache.set(name, fetch(DEMO_BASE + name).then((r) => {
-      if (!r.ok) throw new ApiError('Not found', r.status === 404 ? 404 : r.status)
-      return r.json()
-    }).catch((e) => { demoCache.delete(name); throw e }))
+    demoCache.set(name, Promise.all([fetchDemo(name), getShift()]).then(([text, shift]) =>
+      JSON.parse(text, (_k, v) => (typeof v === 'string' && ISO.test(v) ? new Date(Date.parse(v) + shift).toISOString() : v)),
+    ).catch((e) => { demoCache.delete(name); throw e }))
   }
   return demoCache.get(name) as Promise<T>
 }

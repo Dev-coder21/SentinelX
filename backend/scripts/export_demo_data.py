@@ -12,6 +12,7 @@ the PuLP solver.
 import hashlib
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import datetime, timedelta, timezone
@@ -55,10 +56,24 @@ BUDGET_STEP = 10_000
 BUDGET_MAX = 3_000_000
 
 
+NAIVE_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$")
+
+
+def utc(value):
+    """SQLite drops tzinfo; mark naive timestamps as UTC like the Postgres backend does."""
+    if isinstance(value, dict):
+        return {k: utc(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [utc(v) for v in value]
+    if isinstance(value, str) and NAIVE_ISO.match(value):
+        return value + "Z"
+    return value
+
+
 def write(name: str, data) -> None:
     path = OUT / name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(data, separators=(",", ":")))
+    path.write_text(json.dumps(utc(data), separators=(",", ":")))
 
 
 def main() -> int:
