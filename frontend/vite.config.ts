@@ -10,6 +10,8 @@ export default defineConfig({
   // GitHub Pages serves the site from /<repo>/; set BASE_PATH there, '/' everywhere else
   base: process.env.BASE_PATH || '/',
   plugins: [react()],
+  // Cache-busts the static demo snapshot (public/demo) on every build
+  define: { __BUILD_ID__: JSON.stringify(Date.now().toString(36)) },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

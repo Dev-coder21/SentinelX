@@ -2,3 +2,4 @@
 declare const THREE: any
 declare const gsap: any
 declare const Lenis: any
+declare const __BUILD_ID__: string

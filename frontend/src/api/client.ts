@@ -39,7 +39,7 @@ const demoCache = new Map<string, Promise<unknown>>()
 const ISO = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?Z$/
 
 function fetchDemo(name: string) {
-  return fetch(DEMO_BASE + name).then((r) => {
+  return fetch(`${DEMO_BASE}${name}?v=${__BUILD_ID__}`).then((r) => {
     if (!r.ok) throw new ApiError('Not found', r.status === 404 ? 404 : r.status)
     return r.text()
   })
