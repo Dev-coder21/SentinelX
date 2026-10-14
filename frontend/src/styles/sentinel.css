@@ -11,7 +11,7 @@
 }
 *{box-sizing:border-box}
 html{background:var(--paper)}
-body{background:var(--paper);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.5;font-variation-settings:"wdth" 100;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{background:var(--paper);color:var(--ink);font-family:var(--f);font-size:16px;line-height:1.5;font-variation-settings:"wdth" 100;-webkit-font-smoothing:antialiased;overflow-x:clip}
 body.locked{overflow:hidden}
 button{font:inherit;color:inherit;cursor:pointer}
 a{color:inherit}
