@@ -7,8 +7,7 @@ import { makeWorld, setBeams } from '../shared/world'
 import { Net } from '../shared/net'
 import { tx, tz, ampOf } from '../shared/landMask'
 
-// play the intro once per browser session, not on every reload
-let introPlayed = (() => { try { return sessionStorage.getItem('sx-intro') === '1' } catch { return false } })()
+let introPlayed = false
 
 export function mountLanding(root, opts) {
 const offs = []; let DEAD = false; let nio = null;
@@ -262,7 +261,7 @@ let bt;$('#bud').addEventListener('input',()=>{$('#budV').textContent=money($('#
 measure();ON(window,'load',measure);requestAnimationFrame(loop);
 nio=new IntersectionObserver(es=>{if(es[0].isIntersecting&&!netL){initNetL();nio.disconnect()}},{rootMargin:'400px'});nio.observe($('#netFrame'));
 $('#mode').addEventListener('click',()=>setMode(!DARK));if(DARK)setMode(true);
-if(introPlayed){const el=$('#intro');if(el)el.remove();heroIn();reveals()}else{intro(()=>{if(!DEAD){introPlayed=true;try{sessionStorage.setItem('sx-intro','1')}catch{}heroIn();reveals()}})}
+if(introPlayed){const el=$('#intro');if(el)el.remove();heroIn();reveals()}else{intro(()=>{if(!DEAD){introPlayed=true;heroIn();reveals()}})}
 $$('[data-open]').forEach(b=>b.addEventListener('click',()=>opts.onOpen(b.dataset.open)));
 // Fit the footer wordmark to the page width once the real font has loaded.
 const wm=$('.wordmark');
