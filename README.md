@@ -256,8 +256,8 @@ sentinelx/
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/yourusername/sentinelx.git
-   cd sentinelx
+   git clone https://github.com/Dev-coder21/SentinelX.git
+   cd SentinelX
    ```
 
 2. **Configure environment variables**:
