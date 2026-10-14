@@ -433,3 +433,11 @@ code{background:var(--paper-3);padding:1px 6px;border-radius:3px;font-size:.92em
 .fi a{color:inherit}
 .fieldbox canvas{display:block}
 @media (max-width:700px){.fi.sigrow{grid-template-columns:minmax(0,1fr) auto;gap:12px}.fi.sigrow>div:nth-child(2){grid-column:1/-1;grid-row:2}.fi.sigrow .bigv{font-size:32px!important}}
+
+/* Small screens: story cards scroll beneath the header, so keep it opaque */
+@media (max-width:900px){
+  .nav{background:rgba(227,227,220,.9);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 1px 0 var(--rule)}
+  html.dark .nav{background:rgba(7,9,13,.82);box-shadow:0 1px 0 rgba(220,228,255,.1)}
+  .nav .wrap{min-height:58px}
+}
+html{overflow-x:clip}
