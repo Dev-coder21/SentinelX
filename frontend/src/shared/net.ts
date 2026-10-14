@@ -38,21 +38,24 @@ export class Net{
     // corridor hulls
     this.D.REGIONS.forEach(r=>{if(!this.regions.has(r))return;const ns=this.nodes.filter(n=>n.kind==='s'&&n.s.region===r&&this.shown(n));if(!ns.length)return;const hp=this.hull(ns.map(n=>[n.x,n.y]));
       c.save();c.lineJoin='round';c.lineCap='round';c.beginPath();hp.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));if(hp.length>2)c.closePath();c.lineWidth=58;c.strokeStyle=this.th.hull;c.stroke();c.fillStyle=this.th.hull;if(hp.length>2)c.fill();c.restore();
-      const top=ns.reduce((m,n)=>n.y<m.y?n:m,ns[0]);const cxr=ns.reduce((a,n)=>a+n.x,0)/ns.length;c.font='700 12.5px Archivo, Arial, sans-serif';c.fillStyle=this.th.mute;c.textAlign='center';c.fillText(r,cxr,top.y-top.r-26)});
+      const top=ns.reduce((m,n)=>n.y<m.y?n:m,ns[0]);const cxr=ns.reduce((a,n)=>a+n.x,0)/ns.length;if(this.w<600)return;c.font='700 12.5px Archivo, Arial, sans-serif';c.fillStyle=this.th.mute;c.textAlign='center';c.fillText(r,cxr,top.y-top.r-26)});
     // links
     this.links.forEach(l=>{if(!this.shown(l.a))return;const on=this.lit(l.a)&&this.lit(l.b)&&(!H||l.a===H||l.b===H);const col=this.th.col(l.a.s.risk);
       const mx=(l.a.x+l.b.x)/2+(l.b.y-l.a.y)*.12,my=(l.a.y+l.b.y)/2-(l.b.x-l.a.x)*.12;c.beginPath();c.moveTo(l.a.x,l.a.y);c.quadraticCurveTo(mx,my,l.b.x,l.b.y);
       const strong=(H&&on)||(this.focus>=0&&on);c.strokeStyle=strong?col:on?this.th.link(.08+l.w*.18):this.th.dim;c.lineWidth=strong?1.2+l.w*2.4:.6+l.w*1.4;c.stroke();
       if(on&&!RM){const t=(this.t*(.22+l.w*.3)+l.ph)%1,u=1-t;const px=u*u*l.a.x+2*u*t*mx+t*t*l.b.x,py=u*u*l.a.y+2*u*t*my+t*t*l.b.y;c.beginPath();c.arc(px,py,1.6+l.w*1.4,0,7);c.fillStyle=col;c.fill()}});
     // nodes
-    const order=this.nodes.filter(n=>n.kind==='s').sort((a,b)=>b.s.risk-a.s.risk).slice(0,5);const placed=[];
+    const order=this.nodes.filter(n=>n.kind==='s').sort((a,b)=>b.s.risk-a.s.risk).slice(0,this.w<600?3:5);const placed=[];
     this.nodes.forEach(n=>{if(!this.shown(n))return;const on=this.lit(n);c.globalAlpha=on?1:.18;
       if(n.kind==='p'){c.save();c.translate(n.x,n.y);c.rotate(Math.PI/4);c.fillStyle=this.th.prod;c.fillRect(-n.r*.72,-n.r*.72,n.r*1.44,n.r*1.44);if(this.focus===n.pi){c.strokeStyle='#FF4F00';c.lineWidth=3;c.strokeRect(-n.r,-n.r,n.r*2,n.r*2)}c.restore();
         c.font='700 13px Archivo, Arial, sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle=this.th.bg;c.strokeText(n.name,n.x,n.y+n.r+18);c.fillStyle=this.th.fg;c.fillText(n.name,n.x,n.y+n.r+18)}
       else{const col=this.th.col(n.s.risk);c.beginPath();c.arc(n.x,n.y,n.r,0,7);c.fillStyle=col;if(this.th.glow&&on){c.shadowColor=col;c.shadowBlur=this.th.glow}c.fill();c.shadowBlur=0;c.lineWidth=2;c.strokeStyle=this.th.bg;c.stroke();
         if(this.sel&&this.sel===n){c.beginPath();c.arc(n.x,n.y,n.r+6,0,7);c.strokeStyle=this.th.fg;c.lineWidth=2;c.stroke()}
         const want=n===H||(this.sel===n)||(H&&on)||(!H&&order.includes(n)&&this.focus<0)||(this.focus>=0&&on);
-        if(want){const lx=n.x+n.r+6,ly=n.y+4;if(n===H||!placed.some(p=>Math.abs(p[0]-lx)<120&&Math.abs(p[1]-ly)<16)){placed.push([lx,ly]);c.font='600 12px Archivo, Arial, sans-serif';c.textAlign='left';c.lineWidth=4;c.strokeStyle=this.th.bg;const t=n.s.name.split(' ').slice(0,2).join(' ')+'  '+n.s.risk.toFixed(0);c.strokeText(t,lx,ly);c.fillStyle=this.th.fg;c.fillText(t,lx,ly)}}}
+        if(want){c.font='600 12px Archivo, Arial, sans-serif';const t=n.s.name.split(' ').slice(0,2).join(' ')+'  '+n.s.risk.toFixed(0),tw=c.measureText(t).width;
+          // flip the label to the node's left when it would run off the canvas edge
+          const flip=(n.x+n.r+6+tw)*this.z+this.px>this.w-4;const lx=flip?n.x-n.r-6:n.x+n.r+6,ly=n.y+4,bx=flip?lx-tw:lx;
+          if(n===H||!placed.some(p=>Math.abs(p[0]-bx)<120&&Math.abs(p[1]-ly)<16)){placed.push([bx,ly]);c.textAlign=flip?'right':'left';c.lineWidth=4;c.strokeStyle=this.th.bg;c.strokeText(t,lx,ly);c.fillStyle=this.th.fg;c.fillText(t,lx,ly)}}}
       c.globalAlpha=1})}
   destroy(){this.alive=false;this.ro.disconnect();this.io.disconnect();if(typeof gsap!=='undefined')gsap.killTweensOf(this)}
 }
