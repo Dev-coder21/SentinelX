@@ -441,3 +441,6 @@ code{background:var(--paper-3);padding:1px 6px;border-radius:3px;font-size:.92em
   .nav .wrap{min-height:58px}
 }
 html{overflow-x:clip}
+
+/* Keyboard shortcut hints mean nothing on touch-only devices */
+@media (hover:none) and (pointer:coarse){kbd{display:none}}

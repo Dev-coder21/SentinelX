@@ -22,6 +22,94 @@ const RAW_BASE_URL =
 
 export const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '')
 
+/**
+ * Static hosting (GitHub Pages) has no backend. When no API URL was configured at build
+ * time and the page isn't served locally, read the snapshot in public/demo instead, which
+ * backend/scripts/export_demo_data.py produces from the real backend.
+ */
+const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]']
+export const DEMO_MODE =
+  !import.meta.env.VITE_API_BASE_URL &&
+  !import.meta.env.VITE_API_URL &&
+  typeof location !== 'undefined' &&
+  !LOCAL_HOSTS.includes(location.hostname)
+
+const DEMO_BASE = `${import.meta.env.BASE_URL}demo/`
+const demoCache = new Map<string, Promise<unknown>>()
+
+function demoFile<T>(name: string): Promise<T> {
+  if (!demoCache.has(name)) {
+    demoCache.set(name, fetch(DEMO_BASE + name).then((r) => {
+      if (!r.ok) throw new ApiError('Not found', r.status === 404 ? 404 : r.status)
+      return r.json()
+    }).catch((e) => { demoCache.delete(name); throw e }))
+  }
+  return demoCache.get(name) as Promise<T>
+}
+
+interface DemoPlans {
+  step: number
+  max: number
+  rows: Record<string, PrioritizeResponse['selected_suppliers'][number]>
+  index: number[]
+  plans: (Omit<PrioritizeResponse, 'plan_id' | 'generated_at' | 'budget' | 'remaining_budget' | 'selected_suppliers'> & { ids: string[] })[]
+}
+
+const LATEST_PLAN_KEY = 'sx-demo-plan'
+
+async function demoPrioritize(budget: number): Promise<PrioritizeResponse> {
+  const d = await demoFile<DemoPlans>('plans.json')
+  // Each stored plan is the solver's optimum at a multiple of `step`; the largest step
+  // that fits the budget is always affordable.
+  const i = Math.min(d.index.length, Math.floor(budget / d.step)) - 1
+  const base = i >= 0 ? d.plans[d.index[i]] : null
+  const { ids = [], ...rest } = base ?? { ids: [] as string[] }
+  const plan = {
+    ...(base ? rest : {
+      total_budget_used: 0, total_expected_protected_revenue: 0, objective_value: 0, selected_count: 0,
+      optimization_status: 'Optimal', metadata: {},
+    }),
+    plan_id: crypto.randomUUID?.() ?? String(Date.now()),
+    generated_at: new Date().toISOString(),
+    budget,
+    selected_suppliers: ids.map((id) => d.rows[id]),
+  } as PrioritizeResponse
+  plan.remaining_budget = budget - plan.total_budget_used
+  try { sessionStorage.setItem(LATEST_PLAN_KEY, JSON.stringify(plan)) } catch { /* storage unavailable */ }
+  return plan
+}
+
+function page<T>(list: T[], q: URLSearchParams): T[] {
+  const offset = Number(q.get('offset') || 0)
+  const limit = Number(q.get('limit') || 50)
+  return list.slice(offset, offset + limit)
+}
+
+async function demoRequest<T>(endpoint: string, options: RequestInit): Promise<T> {
+  const [path, query = ''] = endpoint.split('?')
+  const q = new URLSearchParams(query)
+  if (options.method === 'POST' && path === '/prioritize') {
+    return demoPrioritize(Number(JSON.parse(String(options.body || '{}')).budget) || 0) as Promise<T>
+  }
+  if (path === '/health') return demoFile<T>('health.json')
+  if (path === '/dashboard/summary') return demoFile<T>('dashboard-summary.json')
+  if (path === '/network') return demoFile<T>('network.json')
+  if (path === '/suppliers') return page(await demoFile<Supplier[]>('suppliers.json'), q) as T
+  if (path.startsWith('/suppliers/')) return demoFile<T>(`suppliers/${encodeURIComponent(path.slice(11))}.json`)
+  if (path === '/risk-events') {
+    const region = q.get('region'), source = q.get('source')
+    const all = await demoFile<RiskEvent[]>('risk-events.json')
+    return page(all.filter((e) => (!region || e.region === region) && (!source || e.source === source)), q) as T
+  }
+  if (path === '/mitigation-plans/latest') {
+    let saved: string | null = null
+    try { saved = sessionStorage.getItem(LATEST_PLAN_KEY) } catch { /* storage unavailable */ }
+    if (saved) return JSON.parse(saved) as T
+    throw new ApiError('No mitigation plan has been generated yet', 404)
+  }
+  throw new ApiError('Not available in the static demo', 404)
+}
+
 export class ApiError extends Error {
   public status: number
   public detail?: string
@@ -40,6 +128,8 @@ interface RequestOptions extends RequestInit {
 
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const { timeoutMs = 15000, ...fetchOptions } = options
+  if (DEMO_MODE) return demoRequest<T>(endpoint, fetchOptions)
+
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 

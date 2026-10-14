@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
-import { apiClient } from '@/api/client'
+import { apiClient, DEMO_MODE } from '@/api/client'
 import { ago } from '@/shared/core'
 import { installTips, hideTip } from '@/shared/tip'
 import { wipe } from '@/shared/wipe'
@@ -124,15 +124,15 @@ export function AppShell() {
             {supId ? (<><button onClick={() => nav('/app/suppliers')}>Suppliers</button><span className="small">/</span><h1>{sup ? sup.name : 'Supplier'}</h1></>) : <h1>{title}</h1>}
           </div>
           <div className="time">
-            <button className="pl" onClick={() => { model.reload(); toast('Refreshing data from the API') }} aria-label="Reload data from the API" data-tip="Reload data from the API">
+            <button className="pl" onClick={() => { model.reload(); toast(DEMO_MODE ? 'Reloading the sample data' : 'Refreshing data from the API') }} aria-label="Reload data from the API" data-tip="Reload data from the API">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7" /><path d="M20 4v7h-7" /></svg>
             </button>
             <div className="lbl"><b>Scores updated</b><span>{model.loading ? 'loading…' : ago(updated)}</span></div>
           </div>
           <span className="status" tabIndex={0}
-            data-tip={health === 'ok' ? '<b>Backend connected</b>/health is responding. Scores refresh on the backend schedule.' : health === 'down' ? '<b>Backend not reachable</b>/health did not respond. Start the API with docker compose up.' : '<b>Checking the backend</b>'}>
-            <i style={health === 'ok' ? { background: '#1baf7a', boxShadow: '0 0 0 3px rgba(27,175,122,.2)' } : health === 'down' ? { background: '#D93A12', boxShadow: '0 0 0 3px rgba(217,58,18,.2)' } : undefined} />
-            <span className="lb">{health === 'ok' ? 'Live' : health === 'down' ? 'Offline' : 'Checking'}</span>
+            data-tip={DEMO_MODE ? '<b>Sample data</b>This static site has no backend, so it shows a snapshot the real backend scored from example signals. Run it locally with docker compose up for live data.' : health === 'ok' ? '<b>Backend connected</b>/health is responding. Scores refresh on the backend schedule.' : health === 'down' ? '<b>Backend not reachable</b>/health did not respond. Start the API with docker compose up.' : '<b>Checking the backend</b>'}>
+            <i style={DEMO_MODE ? { background: '#DE9E00', boxShadow: '0 0 0 3px rgba(222,158,0,.2)' } : health === 'ok' ? { background: '#1baf7a', boxShadow: '0 0 0 3px rgba(27,175,122,.2)' } : health === 'down' ? { background: '#D93A12', boxShadow: '0 0 0 3px rgba(217,58,18,.2)' } : undefined} />
+            <span className="lb">{DEMO_MODE ? 'Sample data' : health === 'ok' ? 'Live' : health === 'down' ? 'Offline' : 'Checking'}</span>
           </span>
           <button className="tbb" onClick={() => setPalOpen(true)} aria-label="Search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
