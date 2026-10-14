@@ -45,7 +45,7 @@ export class Net{
       const strong=(H&&on)||(this.focus>=0&&on);c.strokeStyle=strong?col:on?this.th.link(.08+l.w*.18):this.th.dim;c.lineWidth=strong?1.2+l.w*2.4:.6+l.w*1.4;c.stroke();
       if(on&&!RM){const t=(this.t*(.22+l.w*.3)+l.ph)%1,u=1-t;const px=u*u*l.a.x+2*u*t*mx+t*t*l.b.x,py=u*u*l.a.y+2*u*t*my+t*t*l.b.y;c.beginPath();c.arc(px,py,1.6+l.w*1.4,0,7);c.fillStyle=col;c.fill()}});
     // nodes
-    const order=this.nodes.filter(n=>n.kind==='s').sort((a,b)=>b.s.risk-a.s.risk).slice(0,this.w<600?3:5);const placed=[];
+    const order=this.nodes.filter(n=>n.kind==='s').sort((a,b)=>b.s.risk-a.s.risk).slice(0,this.w<600?3:5);const placed=[],labels=[];
     this.nodes.forEach(n=>{if(!this.shown(n))return;const on=this.lit(n);c.globalAlpha=on?1:.18;
       if(n.kind==='p'){c.save();c.translate(n.x,n.y);c.rotate(Math.PI/4);c.fillStyle=this.th.prod;c.fillRect(-n.r*.72,-n.r*.72,n.r*1.44,n.r*1.44);if(this.focus===n.pi){c.strokeStyle='#FF4F00';c.lineWidth=3;c.strokeRect(-n.r,-n.r,n.r*2,n.r*2)}c.restore();
         c.font='700 13px Archivo, Arial, sans-serif';c.textAlign='center';c.lineWidth=4;c.strokeStyle=this.th.bg;c.strokeText(n.name,n.x,n.y+n.r+18);c.fillStyle=this.th.fg;c.fillText(n.name,n.x,n.y+n.r+18)}
@@ -55,7 +55,9 @@ export class Net{
         if(want){c.font='600 12px Archivo, Arial, sans-serif';const t=n.s.name.split(' ').slice(0,2).join(' ')+'  '+n.s.risk.toFixed(0),tw=c.measureText(t).width;
           // flip the label to the node's left when it would run off the canvas edge
           const flip=(n.x+n.r+6+tw)*this.z+this.px>this.w-4;const lx=flip?n.x-n.r-6:n.x+n.r+6,ly=n.y+4,bx=flip?lx-tw:lx;
-          if(n===H||!placed.some(p=>Math.abs(p[0]-bx)<120&&Math.abs(p[1]-ly)<16)){placed.push([bx,ly]);c.textAlign=flip?'right':'left';c.lineWidth=4;c.strokeStyle=this.th.bg;c.strokeText(t,lx,ly);c.fillStyle=this.th.fg;c.fillText(t,lx,ly)}}}
-      c.globalAlpha=1})}
+          if(n===H||!placed.some(p=>Math.abs(p[0]-bx)<120&&Math.abs(p[1]-ly)<16)){placed.push([bx,ly]);labels.push([t,lx,ly,flip,c.globalAlpha])}}}
+      c.globalAlpha=1});
+    // labels last, so no node is painted over them
+    c.font='600 12px Archivo, Arial, sans-serif';c.lineWidth=4;labels.forEach(([t,lx,ly,flip,a])=>{c.globalAlpha=a;c.textAlign=flip?'right':'left';c.strokeStyle=this.th.bg;c.strokeText(t,lx,ly);c.fillStyle=this.th.fg;c.fillText(t,lx,ly)});c.globalAlpha=1}
   destroy(){this.alive=false;this.ro.disconnect();this.io.disconnect();if(typeof gsap!=='undefined')gsap.killTweensOf(this)}
 }
